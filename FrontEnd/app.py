@@ -1,0 +1,245 @@
+import dash
+import dash_bootstrap_components as dbc
+import dash_core_components as dcc
+import dash_html_components as html
+import dash_table as dt
+from dash.dependencies import Input, Output, State
+import plotly.graph_objs as go
+import plotly.express as px
+import os
+import glob
+import flask
+import pandas as pd
+
+
+#################  DEFINE THE DASH APP  ####################
+app = dash.Dash(external_stylesheets=[dbc.themes.MATERIA])
+# image_directory =  os.getcwd() + '/img/'
+# list_of_images = [os.path.basename(x) for x in glob.glob('{}*.*'.format(image_directory))]
+# static_image_route = '/static/'
+
+# Add a static image route that serves images from local directory
+# @app.server.route('{}<image_path>'.format(static_image_route))
+# def serve_image(image_path):
+#     image_name = '{}'.format(image_path)
+#     if image_name not in list_of_images:
+#         raise Exception('"{}" is excluded from the allowed static files'.format(image_path))
+#     return flask.send_from_directory(image_directory, image_name)
+
+
+############################################################
+########################## LAYOUT ##########################
+############################################################
+
+##########    HEADER    ###########
+header = html.Div([
+        dbc.Row([
+            dbc.Col(html.Img(src=f"assets/img/DS4A.svg",  className="vertical-center"), md = 2),
+            dbc.Col(html.H3(u"IMPACT OF FOREST COVER LOSS ON RIVER FLOW REGIME IN COLOMBIA", id="titulo", 
+                            style={"color":"purple", "text-align": "center"}), 
+                            md = 8), 
+            dbc.Col(html.Img(src=f"assets/img/col-gov-logo.png", width="200px"), md = 2),
+        ], className="vertical-center")
+    ], 
+    className="container_ds4a container")
+###########    CARDS   #############
+cards = html.Div([
+        dbc.Row([
+            dbc.Col(
+                dbc.Card([
+                    html.Img(src="assets/img/cover_loss.png",  className="card-img"),
+                    html.Div([
+                        html.H5("Cover Loss", className="card-title"), 
+                        html.H1(["30", html.Small("%")], className="display-4")
+                    ], className = "card-img-overlay card_ds4a"),
+                    ], className = "text-right"),
+                md = 3
+            ),
+            dbc.Col(
+                dbc.Card([
+                    html.Img(src="assets/img/flow.png",  className="card-img"),
+                    html.Div([
+                        html.H5("Flow", className="card-title"), 
+                        html.H1(["17", html.Small("mm")], className="display-4")
+                    ], className = "card-img-overlay card_ds4a"),
+                    ], className = "text-left"),
+                md = 3
+            ),
+            dbc.Col(
+                dbc.Card([
+                    html.Img(src="assets/img/precipitation.png",  className="card-img"),
+                    html.Div([
+                        html.H5("Precipitation", className="card-title"), 
+                        html.H1(["25", html.Small("mm")], className="display-4")
+                    ], className = "card-img-overlay card_ds4a"),
+                    ], className = "text-left"),
+                md = 3
+            ),
+            dbc.Col(
+                dbc.Card([
+                    html.Img(src="assets/img/temperature.png",  className="card-img"),
+                    html.Div([
+                        html.H5("Temperature", className="card-title"), 
+                        html.H1(["28", html.Small("°"), "C"], className="display-4")
+                    ], className = "card-img-overlay card_ds4a"),
+                    ], className = "text-right"),
+                md = 3
+            ),
+        ], className="vertical-center")
+
+    ], 
+    className="container_ds4a container")
+###########    BODY    ############# 
+switch = html.Div([
+    html.Div([
+        dbc.Label("Predictive", style={"margin-bottom": "5px",}),
+        html.Br(),
+        dbc.Label("Descriptive"),
+        ],
+        className="switch-container",
+    ),
+    html.Div(
+        [
+            dbc.Checklist(
+                options=[
+                    { "value": 1},
+                ],
+                value=[],
+                id="predictive-descriptive-switch",
+                inline=True,
+                switch=True,
+            )
+        ], 
+        className = "custom-control custom-switch"
+    )
+])
+
+year_slider = html.Div([
+    dcc.Slider(
+        min=2000,
+        max=2019,
+        step=None,
+        marks={value: str(value) for value in range(2000, 2020)},
+        value=2010,
+        className="slider-ds4a"
+    )  
+])
+
+months = {1:'JAN', 2:'FEB', 3:'MAR', 4:'APR', 5:'MAY', 6:'JUN', 
+          7:'JUL', 8:'AGO', 9:'SEP', 10:'OCT', 11:'NOV', 12:'DEC'}
+month_slider = html.Div([
+    dcc.Slider(
+        min=1,
+        max=12,
+        step=None,
+        marks=months,
+        value=10,
+    )  
+])
+#map - US EXAMPLE
+us_cities = pd.read_csv("https://raw.githubusercontent.com/plotly/datasets/master/us-cities-top-1k.csv")
+map_graph = px.scatter_mapbox(us_cities, lat="lat", lon="lon", hover_name="City", hover_data=["State", "Population"],
+                        color_discrete_sequence=["fuchsia"], zoom=3, height=300)
+map_graph.update_layout(
+    mapbox_style="white-bg",
+    mapbox_layers=[
+        {
+            "below": 'traces',
+            "sourcetype": "raster",
+            "source": [
+                "https://basemap.nationalmap.gov/arcgis/rest/services/USGSImageryOnly/MapServer/tile/{z}/{y}/{x}"
+            ]
+        }
+      ])
+map_graph.update_layout(margin={"r":0,"t":0,"l":0,"b":0})
+
+#graficos
+data = px.data.gapminder()#cambiar esto
+data_canada = data[data.country == 'Canada']
+fig = px.bar(data_canada, x='year', y='pop',
+             hover_data=['lifeExp', 'gdpPercap'], color='lifeExp',
+             labels={'pop':'population of Canada'}, height=400)
+
+
+main_card = html.Div(
+        dbc.Card([
+            dbc.Row([ #switch and timeline
+                dbc.Col(#md2 predictive/descriptive switch
+                    switch, 
+                    md=2
+                ),
+                dbc.Col(#md10 years slider
+                    year_slider,
+                    md=10
+                ),
+            ]),
+            dbc.Row([#map and graphs
+                dbc.Col([#map and month_slider
+                        dbc.Row([
+                            dbc.Col(
+                                month_slider,
+                            )
+                        ]),
+                        dbc.Row([
+                            dbc.Col(
+                                dcc.Graph(figure=map_graph, id="map-graph"),
+                                style={"margin-left":" 10px"}
+                            ),
+                            ],
+                        ),
+
+                    ], 
+                    md=6
+                ),
+                dbc.Col([#graphs
+                    dbc.Row([
+                            dbc.Col(
+                                dcc.Graph(figure=fig, id="cover-loss-graph"),
+                                #style={"margin-left":" 10px"}
+                            ),
+                            ],no_gutters=True,
+                        ),
+                    dbc.Row([
+                            dbc.Col(
+                                dcc.Graph(figure=fig, id="flow-graph"),
+                                #style={"margin-left":" 10px"}
+                            ),
+                            ],no_gutters=True,
+                        ),
+                    dbc.Row([
+                            dbc.Col(
+                                dcc.Graph(figure=fig, id="precipitation-graph"),
+                                #style={"margin-left":" 10px"}
+                            ),
+                            ],no_gutters=True,
+                        ),
+                    dbc.Row([
+                            dbc.Col(
+                                dcc.Graph(figure=fig, id="temperature-graph"),
+                                #style={"margin-left":" 10px"}
+                            ),
+                            ],no_gutters=True,
+                        ),
+
+                    ], 
+                    md=6
+                )
+
+            ])
+        ], 
+        className='main-card'
+    ),
+    className="container"
+)
+
+app.layout = dbc.Container(
+    [
+        header,
+        cards,
+        main_card
+    ],
+    fluid=True,
+)
+
+if __name__ in ["__main__"]:
+    app.run_server(debug=False)

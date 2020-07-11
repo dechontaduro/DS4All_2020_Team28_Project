@@ -1,0 +1,38 @@
+.container_ds4a {
+  height: 100px;
+  position: relative;
+}
+.vertical-center {
+  margin: 0;
+  position: absolute;
+  top: 50%;
+  -ms-transform: translateY(-50%);
+  transform: translateY(-50%);
+}
+
+.card_ds4a{
+  color: white;
+}
+.main-card{
+  margin-top: 25px;
+  margin-bottom: 25px;
+  margin-left: 15px;
+  margin-right: 5px;
+}
+
+.custom-switch{
+  transform: rotate(-45deg);
+  /*top: -12px;*/
+  left: 40px;
+}
+
+.switch-container{
+  top: 15px; 
+  left: 50px;
+  position: relative;
+}
+
+.slider-ds4a{
+  padding: 25px 25px 25px !important;
+}
+
