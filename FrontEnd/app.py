@@ -10,7 +10,10 @@ import os
 import glob
 import flask
 import pandas as pd
+#import seaborn as sns
 
+
+data_path = '../data/matrix/matrix_consol_v2.zip'
 
 #################  DEFINE THE DASH APP  ####################
 app = dash.Dash(external_stylesheets=[dbc.themes.MATERIA])
@@ -121,7 +124,8 @@ year_slider = html.Div([
         step=None,
         marks={value: str(value) for value in range(2000, 2020)},
         value=2010,
-        className="slider-ds4a"
+        className="slider-ds4a",
+        id='year-slider',
     )  
 ])
 
@@ -154,12 +158,37 @@ map_graph.update_layout(
 map_graph.update_layout(margin={"r":0,"t":0,"l":0,"b":0})
 
 #graficos
-data = px.data.gapminder()#cambiar esto
-data_canada = data[data.country == 'Canada']
-fig = px.bar(data_canada, x='year', y='pop',
-             hover_data=['lifeExp', 'gdpPercap'], color='lifeExp',
-             labels={'pop':'population of Canada'}, height=400)
+data = pd.read_csv(data_path,  parse_dates = ['date'])
+data.set_index(['mc'], inplace = True)
 
+def plot_data(macrobasin, variables, year):
+    dfc = data.loc[macrobasin].copy()
+    #_figs = []
+    #for i, var in enumerate(variables):
+    print('+'*30, macrobasin, variables, year,'+'*30)
+
+    var = variables[0]
+    _fig = px.line(dfc, x='date', y=var
+                    , range_x=[str(year)+'-01-01',str(year)+'-12-31']
+                    , height=250)
+        #_figs.append(_fig)
+    return _fig
+
+
+#TODO: Capturar el cambio y filtrar la data, las gráficas estén supervisando esta data para que se propague
+
+@app.callback(Output('flow-graph', 'figure'),[Input('year-slider', 'value')])
+def update_flow_graph(value):
+    return plot_data(1, ['v_flow_mean'], value)
+    #return figs = plot_data(1, ['v_flow_mean'], 2017) #'v_flow_mean','v_rainfall_total','v_temperature_mean'
+
+@app.callback(Output('precipitation-graph', 'figure'),[Input('year-slider', 'value')])
+def update_precipitation_graph(value):
+    return plot_data(1, ['v_rainfall_total'], value)
+
+@app.callback(Output('temperature-graph', 'figure'),[Input('year-slider', 'value')])
+def update_temperature_graph(value):
+    return plot_data(1, ['v_temperature_mean'], value)
 
 main_card = html.Div(
         dbc.Card([
@@ -170,7 +199,7 @@ main_card = html.Div(
                 ),
                 dbc.Col(#md10 years slider
                     year_slider,
-                    md=10
+                    md=10,
                 ),
             ]),
             dbc.Row([#map and graphs
@@ -194,29 +223,22 @@ main_card = html.Div(
                 dbc.Col([#graphs
                     dbc.Row([
                             dbc.Col(
-                                dcc.Graph(figure=fig, id="cover-loss-graph"),
+                                dcc.Graph(id="flow-graph"),
                                 #style={"margin-left":" 10px"}
                             ),
                             ],no_gutters=True,
                         ),
                     dbc.Row([
                             dbc.Col(
-                                dcc.Graph(figure=fig, id="flow-graph"),
+                                dcc.Graph(id="precipitation-graph"),
                                 #style={"margin-left":" 10px"}
                             ),
                             ],no_gutters=True,
                         ),
                     dbc.Row([
                             dbc.Col(
-                                dcc.Graph(figure=fig, id="precipitation-graph"),
-                                #style={"margin-left":" 10px"}
-                            ),
-                            ],no_gutters=True,
-                        ),
-                    dbc.Row([
-                            dbc.Col(
-                                dcc.Graph(figure=fig, id="temperature-graph"),
-                                #style={"margin-left":" 10px"}
+                                dcc.Graph(id="temperature-graph"),
+                                #style={"margin-left":" 10px"} figure=figs[2], 
                             ),
                             ],no_gutters=True,
                         ),
