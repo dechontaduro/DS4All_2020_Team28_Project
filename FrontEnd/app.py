@@ -3,6 +3,11 @@ import dash_bootstrap_components as dbc
 import dash_core_components as dcc
 import dash_html_components as html
 import dash_table as dt
+
+import dash_leaflet as dl
+from dash_leaflet import express as dlx
+import json
+
 from dash.dependencies import Input, Output, State
 import plotly.graph_objs as go
 import plotly.express as px
@@ -14,6 +19,7 @@ import pandas as pd
 
 
 data_path = '../data/matrix/matrix_consol_v2.zip'
+basins_map_path = '../data/shapes/Macro_Cuencas.json'
 
 #################  DEFINE THE DASH APP  ####################
 app = dash.Dash(external_stylesheets=[dbc.themes.MATERIA])
@@ -158,22 +164,46 @@ month_slider = html.Div([
         id='month-slider',
     )  
 ])
-#map - US EXAMPLE
-us_cities = pd.read_csv("https://raw.githubusercontent.com/plotly/datasets/master/us-cities-top-1k.csv")
-map_graph = px.scatter_mapbox(us_cities, lat="lat", lon="lon", hover_name="City", hover_data=["State", "Population"],
-                        color_discrete_sequence=["fuchsia"], zoom=3, height=300)
-map_graph.update_layout(
-    mapbox_style="white-bg",
-    mapbox_layers=[
-        {
-            "below": 'traces',
-            "sourcetype": "raster",
-            "source": [
-                "https://basemap.nationalmap.gov/arcgis/rest/services/USGSImageryOnly/MapServer/tile/{z}/{y}/{x}"
-            ]
-        }
-      ])
-map_graph.update_layout(margin={"r":0,"t":0,"l":0,"b":0})
+
+#https://dash-leaflet.herokuapp.com/#us_states
+basins_map_js = pd.read_json(basins_map_path)
+basins_map_data = None
+with open(basins_map_path) as f:
+    basins_map_data = json.load(f)
+
+marks = [0, 7, 14, 21, 28, 35, 42, 48]
+colorscale = ['#FFEDA0', '#FED976', '#FEB24C', '#FD8D3C', '#FC4E2A', '#E31A1C', '#BD0026', '#800026']
+
+def get_style(feature):
+    #return dict(fillColor='#FFEDA0', weight=2, opacity=1, color='white', dashArray='3', fillOpacity=0.7)
+    color = [colorscale[i] for i, item in enumerate(marks) if feature["properties"]["Macrocuenca"] > item][-1]
+    return dict(fillColor=color, weight=2, opacity=1, color='white', dashArray='3', fillOpacity=0.7)
+
+def get_info(feature=None):
+    header = [html.H4("Macrobasin")]
+    #return header
+    if not feature:
+        return header + ["Hoover over a macrobasin"]
+    return header + [html.B(feature["properties"]["Macrocuenca"]), html.Br(),
+                     "{:.1f} ha".format(feature["properties"]["Area"])]
+
+def get_macrobasin_id(feature=None):
+    return feature["properties"]["Macrocuenca"]
+
+ctg = ["{}+".format(mark, marks[i + 1]) for i, mark in enumerate(marks[:-1])] + ["{}+".format(marks[-1])]
+colorbar = dlx.categorical_colorbar(categories=ctg, colorscale=colorscale, width=300, height=30, position="bottomleft")
+
+options = dict(hoverStyle=dict(weight=5, color='#666', dashArray=''), zoomToBoundsOnClick=True)
+basins_map_json = dlx.geojson(basins_map_data, id="basins_map", defaultOptions=options, style=get_style)
+
+info = html.Div(children=get_info(), id="info", className="info",
+                style={"position": "absolute", "top": "10px", "right": "10px", "z-index": "1000"})
+
+map_graph = [dl.Map(children=[dl.TileLayer(), basins_map_json, colorbar, info], center=[4.60971, -74.08175], zoom=5)]
+
+@app.callback(Output("info", "children"), [Input("basins_map", "featureHover")])
+def info_hover(feature):
+    return get_info(feature)
 
 #graficos
 data = pd.read_csv(data_path,  parse_dates = ['date'])
@@ -192,6 +222,9 @@ def plot_data(macrobasin, variables, year, month=1):
         #_figs.append(_fig)
     return _fig
 
+#flow_graph = dcc.Graph(id="flow-graph")
+#flow_graph.figure = plot_data(1, ['v_rainfall_total'], '2010', '1')
+
 
 #TODO: Capturar el cambio y filtrar la data, las gráficas estén supervisando esta data para que se propague
 
@@ -199,18 +232,23 @@ def plot_data(macrobasin, variables, year, month=1):
 def on_switch(value):
     return {"display": "block" if value else "none"}
 
-@app.callback(Output('flow-graph', 'figure'),[Input('year-slider', 'value'), Input('month-slider', 'value')])
-def update_flow_graph(y_value, m_value):
-    return plot_data(1, ['v_flow_mean'], y_value, m_value)
-    #return figs = plot_data(1, ['v_flow_mean'], 2017) #'v_flow_mean','v_rainfall_total','v_temperature_mean'
+@app.callback(Output('flow-graph', 'figure'), 
+    [Input('year-slider', 'value'), Input('month-slider', 'value'), Input("basins_map", "featureClick")])
+def update_flow_graph(y_value, m_value, feature):
+    macrobasin_id = get_macrobasin_id(feature)
+    return plot_data(macrobasin_id, ['v_flow_mean'], y_value, m_value, )
 
-@app.callback(Output('precipitation-graph', 'figure'),[Input('year-slider', 'value'), Input('month-slider', 'value')])
-def update_precipitation_graph(y_value, m_value):
-    return plot_data(1, ['v_rainfall_total'], y_value, m_value)
+@app.callback(Output('precipitation-graph', 'figure'),
+    [Input('year-slider', 'value'), Input('month-slider', 'value'), Input("basins_map", "featureClick")])
+def update_precipitation_graph(y_value, m_value, feature):
+    macrobasin_id = get_macrobasin_id(feature)
+    return plot_data(macrobasin_id, ['v_rainfall_total'], y_value, m_value)
 
-@app.callback(Output('temperature-graph', 'figure'),[Input('year-slider', 'value'), Input('month-slider', 'value')])
-def update_temperature_graph(y_value, m_value):
-    return plot_data(1, ['v_temperature_mean'], y_value, m_value)
+@app.callback(Output('temperature-graph', 'figure'),
+    [Input('year-slider', 'value'), Input('month-slider', 'value'), Input("basins_map", "featureClick")])
+def update_temperature_graph(y_value, m_value, feature):
+    macrobasin_id = get_macrobasin_id(feature)
+    return plot_data(macrobasin_id, ['v_temperature_mean'], y_value, m_value)
 
 main_card = html.Div(
         dbc.Card([
@@ -233,8 +271,9 @@ main_card = html.Div(
                         ]),
                         dbc.Row([
                             dbc.Col(
-                                dcc.Graph(figure=map_graph, id="map-graph"),
-                                style={"margin-left":" 10px"}
+                                html.Div(map_graph,
+                                style={'width': '100%', 'height': '50vh', 'margin': "auto", "display": "block"}, id="map"
+                                )
                             ),
                             ],
                         ),
