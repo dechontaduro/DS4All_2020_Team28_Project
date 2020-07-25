@@ -234,20 +234,26 @@ def on_switch(value):
 
 @app.callback(Output('flow-graph', 'figure'), 
     [Input('year-slider', 'value'), Input('month-slider', 'value'), Input("basins_map", "featureClick")])
-def update_flow_graph(y_value, m_value, feature):
-    macrobasin_id = get_macrobasin_id(feature)
+def update_flow_graph(y_value, m_value, feature=None):
+    macrobasin_id = 1
+    if not feature is None:
+        macrobasin_id = get_macrobasin_id(feature)
     return plot_data(macrobasin_id, ['v_flow_mean'], y_value, m_value, )
 
 @app.callback(Output('precipitation-graph', 'figure'),
     [Input('year-slider', 'value'), Input('month-slider', 'value'), Input("basins_map", "featureClick")])
-def update_precipitation_graph(y_value, m_value, feature):
-    macrobasin_id = get_macrobasin_id(feature)
+def update_precipitation_graph(y_value, m_value, feature=None):
+    macrobasin_id = 1
+    if not feature is None:
+        macrobasin_id = get_macrobasin_id(feature)
     return plot_data(macrobasin_id, ['v_rainfall_total'], y_value, m_value)
 
 @app.callback(Output('temperature-graph', 'figure'),
     [Input('year-slider', 'value'), Input('month-slider', 'value'), Input("basins_map", "featureClick")])
-def update_temperature_graph(y_value, m_value, feature):
-    macrobasin_id = get_macrobasin_id(feature)
+def update_temperature_graph(y_value, m_value, feature=None):
+    macrobasin_id = 1
+    if not feature is None:
+        macrobasin_id = get_macrobasin_id(feature)
     return plot_data(macrobasin_id, ['v_temperature_mean'], y_value, m_value)
 
 main_card = html.Div(
