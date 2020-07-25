@@ -46,6 +46,19 @@ header = html.Div([
     ], 
     className="container_ds4a container")
 ###########    CARDS   #############
+scenarios = {1:'1', 2:'2', 3:'3', 4:'4'}
+scn_slider = html.Div([
+        dcc.Slider(
+            min=1,
+            max=4,
+            step=None,
+            marks=scenarios,
+            value=2,
+        )
+    ], 
+    style= {'display': 'none'},
+    id = "scenarios"
+)
 cards = html.Div([
         dbc.Row([
             dbc.Col(
@@ -79,13 +92,17 @@ cards = html.Div([
                 md = 3
             ),
             dbc.Col(
-                dbc.Card([
-                    html.Img(src="assets/img/temperature.png",  className="card-img"),
-                    html.Div([
-                        html.H5("Temperature", className="card-title"), 
-                        html.H1(["28", html.Small("°"), "C"], className="display-4")
-                    ], className = "card-img-overlay card_ds4a"),
-                    ], className = "text-right"),
+                [
+                    dbc.Card([
+                        html.Img(src="assets/img/temperature.png",  className="card-img"),
+                        html.Div([
+                            html.H5("Temperature", className="card-title"), 
+                            html.H1(["28", html.Small("°"), "C"], className="display-4")
+                        ], className = "card-img-overlay card_ds4a"),
+                        ], className = "text-right"
+                    ),
+                    scn_slider,
+                ],
                 md = 3
             ),
         ], className="vertical-center")
@@ -105,7 +122,7 @@ switch = html.Div([
         [
             dbc.Checklist(
                 options=[
-                    { "value": 1},
+                    {"value": 1},
                 ],
                 value=[],
                 id="predictive-descriptive-switch",
@@ -138,6 +155,7 @@ month_slider = html.Div([
         step=None,
         marks=months,
         value=10,
+        id='month-slider',
     )  
 ])
 #map - US EXAMPLE
@@ -161,15 +179,15 @@ map_graph.update_layout(margin={"r":0,"t":0,"l":0,"b":0})
 data = pd.read_csv(data_path,  parse_dates = ['date'])
 data.set_index(['mc'], inplace = True)
 
-def plot_data(macrobasin, variables, year):
+def plot_data(macrobasin, variables, year, month=1):
     dfc = data.loc[macrobasin].copy()
     #_figs = []
     #for i, var in enumerate(variables):
-    print('+'*30, macrobasin, variables, year,'+'*30)
+    print('+'*30, macrobasin, variables, year, month,'+'*30)
 
     var = variables[0]
     _fig = px.line(dfc, x='date', y=var
-                    , range_x=[str(year)+'-01-01',str(year)+'-12-31']
+                    , range_x=[str(year)+'-01-01',str(year)+'-'+ str(month)+ '-' + ('28' if (month == 2) else ('30' if month in [4, 6, 9, 11] else '31'))]
                     , height=250)
         #_figs.append(_fig)
     return _fig
@@ -177,18 +195,22 @@ def plot_data(macrobasin, variables, year):
 
 #TODO: Capturar el cambio y filtrar la data, las gráficas estén supervisando esta data para que se propague
 
-@app.callback(Output('flow-graph', 'figure'),[Input('year-slider', 'value')])
-def update_flow_graph(value):
-    return plot_data(1, ['v_flow_mean'], value)
+@app.callback(Output('scenarios', 'style'),[Input("predictive-descriptive-switch", 'value')])
+def on_switch(value):
+    return {"display": "block" if value else "none"}
+
+@app.callback(Output('flow-graph', 'figure'),[Input('year-slider', 'value'), Input('month-slider', 'value')])
+def update_flow_graph(y_value, m_value):
+    return plot_data(1, ['v_flow_mean'], y_value, m_value)
     #return figs = plot_data(1, ['v_flow_mean'], 2017) #'v_flow_mean','v_rainfall_total','v_temperature_mean'
 
-@app.callback(Output('precipitation-graph', 'figure'),[Input('year-slider', 'value')])
-def update_precipitation_graph(value):
-    return plot_data(1, ['v_rainfall_total'], value)
+@app.callback(Output('precipitation-graph', 'figure'),[Input('year-slider', 'value'), Input('month-slider', 'value')])
+def update_precipitation_graph(y_value, m_value):
+    return plot_data(1, ['v_rainfall_total'], y_value, m_value)
 
-@app.callback(Output('temperature-graph', 'figure'),[Input('year-slider', 'value')])
-def update_temperature_graph(value):
-    return plot_data(1, ['v_temperature_mean'], value)
+@app.callback(Output('temperature-graph', 'figure'),[Input('year-slider', 'value'), Input('month-slider', 'value')])
+def update_temperature_graph(y_value, m_value):
+    return plot_data(1, ['v_temperature_mean'], y_value, m_value)
 
 main_card = html.Div(
         dbc.Card([
@@ -264,4 +286,4 @@ app.layout = dbc.Container(
 )
 
 if __name__ in ["__main__"]:
-    app.run_server(debug=False)
+    app.run_server(debug=True)
