@@ -52,6 +52,7 @@ header = html.Div([
     ], 
     className="container_ds4a container")
 ###########    CARDS   #############
+#climate scenario slider
 scenarios = {1:'1', 2:'2', 3:'3', 4:'4'}
 scn_slider = html.Div([
         dcc.Slider(
@@ -65,6 +66,20 @@ scn_slider = html.Div([
     style= {'display': 'none'},
     id = "scenarios"
 )
+#Cover Loss Slider
+cover_loss_marks = {x: f'{x}%' for x in [0, 25, 50, 100]}
+cover_loss_slider = html.Div([
+        dcc.Slider(
+            min=0,
+            max=100,
+            marks=cover_loss_marks,
+            value=30,
+        )
+    ], 
+    style= {'display': 'none'},
+    id = "cover-loss-scenario"
+)
+
 cards = html.Div([
         dbc.Row([
             dbc.Col(
@@ -165,6 +180,40 @@ month_slider = html.Div([
     )  
 ])
 
+##########################################################
+######################### + INFO #########################
+##########################################################
+
+more_info = html.Div(
+    [
+        dbc.Button(html.I("+", className = "material-icons pmd-sm "), 
+            id="open-more-info", className="btn pmd-btn-fab pmd-ripple-effect btn-info pmd-btn-raised more-info"
+        ),
+        dbc.Modal(#put here the content
+            [
+                dbc.ModalHeader("Title of more info Section"),
+                dbc.ModalBody(
+                    html.Div(
+                        [
+                            dbc.Row(
+                                [ 
+                                    dbc.Col(html.Img(src=f"assets/img/col-gov-logo.png", width="200px")),
+                                ],
+                            )
+                        ], 
+                    ),
+                ),
+                dbc.ModalFooter(
+                    dbc.Button("Close", id="close-more-info", className="ml-auto")
+                ),
+            ],
+            id="more-info-modal",
+            size="xl", #"lg" lg -> large,  xl -> extra-large
+            scrollable=True, #comment if you want 
+        ),   
+    ]
+)
+
 #https://dash-leaflet.herokuapp.com/#us_states
 basins_map_js = pd.read_json(basins_map_path)
 basins_map_data = None
@@ -173,6 +222,16 @@ with open(basins_map_path) as f:
 
 marks = [0, 7, 14, 21, 28, 35, 42, 48]
 colorscale = ['#FFEDA0', '#FED976', '#FEB24C', '#FD8D3C', '#FC4E2A', '#E31A1C', '#BD0026', '#800026']
+
+@app.callback(
+    Output("more-info-modal", "is_open"),
+    [Input("open-more-info", "n_clicks"), Input("close-more-info", "n_clicks")],
+    [State("more-info-modal", "is_open")],)
+def toggle_more_info(n1, n2, is_open):
+    if n1 or n2:
+        return not is_open
+    return is_open
+
 
 def get_style(feature):
     #return dict(fillColor='#FFEDA0', weight=2, opacity=1, color='white', dashArray='3', fillOpacity=0.7)
@@ -209,7 +268,7 @@ def info_hover(feature):
 data = pd.read_csv(data_path,  parse_dates = ['date'])
 data.set_index(['mc'], inplace = True)
 
-def plot_data(macrobasin, variables, year, month=1):
+def plot_data(macrobasin, variables, year, month=12):
     dfc = data.loc[macrobasin].copy()
     #_figs = []
     #for i, var in enumerate(variables):
@@ -217,7 +276,7 @@ def plot_data(macrobasin, variables, year, month=1):
 
     var = variables[0]
     _fig = px.line(dfc, x='date', y=var
-                    , range_x=[str(year)+'-01-01',str(year)+'-'+ str(month)+ '-' + ('28' if (month == 2) else ('30' if month in [4, 6, 9, 11] else '31'))]
+                    , range_x=[str(year)+'-01-01',str(year)+'-12-31']
                     , height=250)
         #_figs.append(_fig)
     return _fig
@@ -233,28 +292,28 @@ def on_switch(value):
     return {"display": "block" if value else "none"}
 
 @app.callback(Output('flow-graph', 'figure'), 
-    [Input('year-slider', 'value'), Input('month-slider', 'value'), Input("basins_map", "featureClick")])
-def update_flow_graph(y_value, m_value, feature=None):
+    [Input('year-slider', 'value'), Input("basins_map", "featureClick")])
+def update_flow_graph(y_value, feature=None):
     macrobasin_id = 1
     if not feature is None:
         macrobasin_id = get_macrobasin_id(feature)
-    return plot_data(macrobasin_id, ['v_flow_mean'], y_value, m_value, )
+    return plot_data(macrobasin_id, ['v_flow_mean'], y_value, )
 
 @app.callback(Output('precipitation-graph', 'figure'),
-    [Input('year-slider', 'value'), Input('month-slider', 'value'), Input("basins_map", "featureClick")])
-def update_precipitation_graph(y_value, m_value, feature=None):
+    [Input('year-slider', 'value'), Input("basins_map", "featureClick")])
+def update_precipitation_graph(y_value, feature=None):
     macrobasin_id = 1
     if not feature is None:
         macrobasin_id = get_macrobasin_id(feature)
-    return plot_data(macrobasin_id, ['v_rainfall_total'], y_value, m_value)
+    return plot_data(macrobasin_id, ['v_rainfall_total'], y_value)
 
 @app.callback(Output('temperature-graph', 'figure'),
-    [Input('year-slider', 'value'), Input('month-slider', 'value'), Input("basins_map", "featureClick")])
-def update_temperature_graph(y_value, m_value, feature=None):
+    [Input('year-slider', 'value'), Input("basins_map", "featureClick")])
+def update_temperature_graph(y_value, feature=None):
     macrobasin_id = 1
     if not feature is None:
         macrobasin_id = get_macrobasin_id(feature)
-    return plot_data(macrobasin_id, ['v_temperature_mean'], y_value, m_value)
+    return plot_data(macrobasin_id, ['v_temperature_mean'], y_value)
 
 main_card = html.Div(
         dbc.Card([
@@ -270,15 +329,11 @@ main_card = html.Div(
             ]),
             dbc.Row([#map and graphs
                 dbc.Col([#map and month_slider
-                        dbc.Row([
-                            dbc.Col(
-                                month_slider,
-                            )
-                        ]),
+                        #dbc.Row([dbc.Col(month_slider,)]),
                         dbc.Row([
                             dbc.Col(
                                 html.Div(map_graph,
-                                style={'width': '100%', 'height': '50vh', 'margin': "auto", "display": "block"}, id="map"
+                                style={'width': '100%', 'height': '50vh', 'margin': "auto", "display": "block", "margin-left": "15px"}, id="map"
                                 )
                             ),
                             ],
@@ -321,11 +376,13 @@ main_card = html.Div(
     className="container"
 )
 
+app.title = 'Team 28'
 app.layout = dbc.Container(
     [
         header,
         cards,
-        main_card
+        main_card,
+        more_info
     ],
     fluid=True,
 )
