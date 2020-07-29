@@ -286,7 +286,7 @@ def get_style(feature):
 
 def get_info(feature=None, year=None):
     if not feature:
-        return ["Hoover over a macrobasin"]
+        return None #["Hoover over a macrobasin"]
 
     macrobasin_id = get_macrobasin_id(feature)
     loss_cover_value = get_loss_cover(macrobasin_id, year)
@@ -306,23 +306,25 @@ basins_dropdown = dcc.Dropdown(
         id='macro-basins',
         options=basins_map_options,
         value=basins_map_options[0]['value']
-    )
+    ) 
 
-#def show_map(path):
-basins_map_data = None
-with open(basins_map_options[0]['value']) as f:
-    basins_map_data = json.load(f)
 
 ctg = ["{:.0f}+".format(mark * 100, marks[i + 1]*100) for i, mark in enumerate(marks[:-1])]# + ["{:.0f}+".format(marks[-1] * 100)]
 colorbar = dlx.categorical_colorbar(categories=ctg, colorscale=colorscale, width=300, height=30, position="bottomleft")
 
-options = dict(hoverStyle=dict(weight=5, color='#666', dashArray=''), zoomToBoundsOnClick=True)
-basins_map_json = dlx.geojson(basins_map_data, id="basins_map", defaultOptions=options, style=get_style)
-
+options = dict(hoverStyle=dict(weight=5, color='#666', dashArray=''), zoomToBoundsOnClick=False)
 info = html.Div(children=get_info(), id="info", className="info",
             style={"position": "absolute", "top": "10px", "right": "10px", "z-index": "1000"})
 
-map_graph = [dl.Map(children=[dl.TileLayer(), basins_map_json, colorbar, info], center=[4.60971, -74.08175], zoom=5)]
+
+#def show_map(path):
+#basins_map_data = None
+map_graph = None
+with open(basins_map_options[0]['value']) as f:
+    _ = json.load(f)
+    basins_map_json = dlx.geojson(_, id="basins_map", defaultOptions=options, style=get_style)
+    map_graph = [dl.Map(children=[dl.TileLayer(), basins_map_json, colorbar, info], center=[4.60971, -74.08175], zoom=5)]
+
 
 #map_graph = show_map(basins_map_options[0]['value'])
 
@@ -331,7 +333,16 @@ def info_hover(feature, year):
     return get_info(feature, year)
 
 
+@app.callback(
+    Output('basins_map', 'children'),
+    [Input('macro-basins', 'value')])
+def update_output(value):
+    print(value)
+    with open(value) as f:
+        _ = json.load(f)
+        basins_map_json = dlx.geojson(_, id="basins_map", defaultOptions=options, style=get_style)
 
+    return dl.Map(dl.Map(children=[dl.TileLayer(), basins_map_json, colorbar, info], center=[4.60971, -74.08175], zoom=5))
 
 
 
