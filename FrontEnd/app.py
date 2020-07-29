@@ -74,6 +74,7 @@ cover_loss_slider = html.Div([
             max=100,
             marks=cover_loss_marks,
             value=30,
+            id = "cover-loss-scenario-value"
         )
     ], 
     style= {'display': 'none'},
@@ -82,14 +83,16 @@ cover_loss_slider = html.Div([
 
 cards = html.Div([
         dbc.Row([
-            dbc.Col(
-                dbc.Card([
-                    html.Img(src="assets/img/cover_loss.png",  className="card-img"),
-                    html.Div([
-                        html.H5("Cover Loss", className="card-title"), 
-                        html.H1(["30", html.Small("%")], className="display-4")
-                    ], className = "card-img-overlay card_ds4a"),
-                    ], className = "text-right"),
+            dbc.Col([
+                    dbc.Card([
+                        html.Img(src="assets/img/cover_loss.png",  className="card-img"),
+                        html.Div([
+                            html.H5("Cover Loss", className="card-title"), 
+                            html.H1(["30", html.Small("%")], className="display-4", id= 'cover-loss-value')
+                        ], className = "card-img-overlay card_ds4a"),
+                        ], className = "text-right"),
+                    cover_loss_slider,
+                ],
                 md = 3
             ),
             dbc.Col(
@@ -97,19 +100,21 @@ cards = html.Div([
                     html.Img(src="assets/img/flow.png",  className="card-img"),
                     html.Div([
                         html.H5("Flow", className="card-title"), 
-                        html.H1(["17", html.Small("mm")], className="display-4")
+                        html.H1(["17", html.Small("mm")], className="display-4", id = 'flow-value')
                     ], className = "card-img-overlay card_ds4a"),
                     ], className = "text-left"),
                 md = 3
             ),
-            dbc.Col(
-                dbc.Card([
-                    html.Img(src="assets/img/precipitation.png",  className="card-img"),
-                    html.Div([
-                        html.H5("Precipitation", className="card-title"), 
-                        html.H1(["25", html.Small("mm")], className="display-4")
-                    ], className = "card-img-overlay card_ds4a"),
-                    ], className = "text-left"),
+            dbc.Col([
+                    dbc.Card([
+                        html.Img(src="assets/img/precipitation.png",  className="card-img"),
+                        html.Div([
+                            html.H5("Precipitation", className="card-title"), 
+                            html.H1(["25", html.Small("mm")], className="display-4")
+                        ], className = "card-img-overlay card_ds4a"),
+                        ], className = "text-left"),
+                    scn_slider,
+                ],
                 md = 3
             ),
             dbc.Col(
@@ -122,7 +127,6 @@ cards = html.Div([
                         ], className = "card-img-overlay card_ds4a"),
                         ], className = "text-right"
                     ),
-                    scn_slider,
                 ],
                 md = 3
             ),
@@ -165,7 +169,7 @@ year_slider = html.Div([
         className="slider-ds4a",
         id='year-slider',
     )  
-])
+], id='year-slider-div',)
 
 months = {1:'JAN', 2:'FEB', 3:'MAR', 4:'APR', 5:'MAY', 6:'JUN', 
           7:'JUL', 8:'AGO', 9:'SEP', 10:'OCT', 11:'NOV', 12:'DEC'}
@@ -249,7 +253,7 @@ def get_info(feature=None):
 def get_macrobasin_id(feature=None):
     return feature["properties"]["Macrocuenca"]
 
-ctg = ["{}+".format(mark, marks[i + 1]) for i, mark in enumerate(marks[:-1])] + ["{}+".format(marks[-1])]
+ctg = ["{}-{}+".format(mark, marks[i + 1]) for i, mark in enumerate(marks[:-1])] + ["{}+".format(marks[-1])]
 colorbar = dlx.categorical_colorbar(categories=ctg, colorscale=colorscale, width=300, height=30, position="bottomleft")
 
 options = dict(hoverStyle=dict(weight=5, color='#666', dashArray=''), zoomToBoundsOnClick=True)
@@ -287,17 +291,20 @@ def plot_data(macrobasin, variables, year, month=12):
 
 #TODO: Capturar el cambio y filtrar la data, las gráficas estén supervisando esta data para que se propague
 
-@app.callback(Output('scenarios', 'style'),[Input("predictive-descriptive-switch", 'value')])
+@app.callback([Output('scenarios', 'style'), Output('cover-loss-scenario', 'style'), Output('year-slider-div', 'style')],[Input("predictive-descriptive-switch", 'value')])
 def on_switch(value):
-    return {"display": "block" if value else "none"}
+    return {"display": "block" if value else "none"}, {"display": "block" if value else "none"}, {"display": "none" if value else "block"}
 
-@app.callback(Output('flow-graph', 'figure'), 
+
+@app.callback([Output('flow-graph', 'figure'), Output('flow-value', 'children')], 
     [Input('year-slider', 'value'), Input("basins_map", "featureClick")])
 def update_flow_graph(y_value, feature=None):
     macrobasin_id = 1
     if not feature is None:
         macrobasin_id = get_macrobasin_id(feature)
-    return plot_data(macrobasin_id, ['v_flow_mean'], y_value, )
+    df = data.loc[macrobasin_id].copy()
+    flow = round(df[(df['date'] > f'{y_value}-01-01') & (df['date'] < f'{y_value}-12-31')]['v_flow_mean'].mean(),1)
+    return plot_data(macrobasin_id, ['v_flow_mean'], y_value), ["{:.1e}".format(flow), html.Small("mm")]
 
 @app.callback(Output('precipitation-graph', 'figure'),
     [Input('year-slider', 'value'), Input("basins_map", "featureClick")])
@@ -314,6 +321,12 @@ def update_temperature_graph(y_value, feature=None):
     if not feature is None:
         macrobasin_id = get_macrobasin_id(feature)
     return plot_data(macrobasin_id, ['v_temperature_mean'], y_value)
+
+@app.callback(Output('cover-loss-value', 'children'),[Input("cover-loss-scenario-value", 'value')])
+def on_cover_loss_slider(value):
+    return [f"{value}", html.Small("%")]
+
+
 
 main_card = html.Div(
         dbc.Card([
@@ -378,12 +391,13 @@ main_card = html.Div(
 
 app.title = 'Team 28'
 app.layout = dbc.Container(
+    html.Div(
     [
         header,
         cards,
         main_card,
         more_info
-    ],
+    ]),
     fluid=True,
 )
 
