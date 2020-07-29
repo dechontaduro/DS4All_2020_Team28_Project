@@ -15,11 +15,25 @@ import os
 import glob
 import flask
 import pandas as pd
-#import seaborn as sns
+import numpy as np
+import datetime
 
 
 data_path = '../data/matrix/matrix_consol_v2.zip'
-basins_map_path = '../data/shapes/Macro_Cuencas.json'
+variables_graph = [
+    {'label':'Flow', 'value':'v_flow_mean', 'color': '#B855A4'}, 
+    {'label':'Rain Fall', 'value':'v_rainfall_total', 'color': '#4ABEEE'}, 
+    {'label':'Temperature', 'value':'v_temperature_mean', 'color': '#FCA93A'}]
+
+basins_map_options = [
+    #{'label':'todas', 'value':'../data/shapes/Macro_Cuencas2.json'},
+    {'label':'Macrobasins 1-38,42,45', 'value':'../data/shapes/Cuencas_ 1a38_42_45.json'},
+    {'label':'Macrobasins 39,43,46', 'value':'../data/shapes/Cuencas_39_43_46.json'},
+    {'label':'Macrobasins 40,44,47', 'value':'../data/shapes/Cuencas_40_44_47.json'},
+    {'label':'Macrobasins 41,48', 'value':'../data/shapes/Cuencas_41_48.json'}]
+
+
+
 
 #################  DEFINE THE DASH APP  ####################
 app = dash.Dash(external_stylesheets=[dbc.themes.MATERIA])
@@ -171,18 +185,18 @@ year_slider = html.Div([
     )  
 ], id='year-slider-div',)
 
-months = {1:'JAN', 2:'FEB', 3:'MAR', 4:'APR', 5:'MAY', 6:'JUN', 
-          7:'JUL', 8:'AGO', 9:'SEP', 10:'OCT', 11:'NOV', 12:'DEC'}
-month_slider = html.Div([
-    dcc.Slider(
-        min=1,
-        max=12,
-        step=None,
-        marks=months,
-        value=10,
-        id='month-slider',
-    )  
-])
+# months = {1:'JAN', 2:'FEB', 3:'MAR', 4:'APR', 5:'MAY', 6:'JUN', 
+#           7:'JUL', 8:'AGO', 9:'SEP', 10:'OCT', 11:'NOV', 12:'DEC'}
+# month_slider = html.Div([
+#     dcc.Slider(
+#         min=1,
+#         max=12,
+#         step=None,
+#         marks=months,
+#         value=10,
+#         id='month-slider',
+#     )  
+# ])
 
 ##########################################################
 ######################### + INFO #########################
@@ -218,14 +232,210 @@ more_info = html.Div(
     ]
 )
 
-#https://dash-leaflet.herokuapp.com/#us_states
-basins_map_js = pd.read_json(basins_map_path)
+
+
+
+
+
+
+######################### Data ###########################
+data = pd.read_csv(data_path,  parse_dates = ['date'])
+data.set_index(['mc'], inplace = True)
+
+
+
+
+
+
+###################### Map ###############################
+year = 2010
+colorscale = ['#FFEDA0', '#FED976', '#FEB24C', '#FD8D3C', '#FC4E2A', '#E31A1C', '#BD0026', '#800026']
+
+def get_color_marks(x, cs):
+    x_min = x.min()
+    x_max = x.max()
+    x_len = len(cs)
+    x_step = (x_max - x_min) / (x_len - 1)
+
+    #print(x_min, x_max)
+    _ = []
+    for i in range(x_len + 1):
+        _.append(x_min + i * x_step)
+    
+    #_[-1] = x_max
+    return _
+
+
+def get_loss_cover(macrobasin, year):
+    dfc = data.loc[macrobasin].copy()
+    dfc = dfc.loc[(dfc.year == year) & (dfc.month == 12), 'v_loss_cover']
+    #print(dfc)
+    return dfc.values[0]
+    
+
+def get_style(feature):
+    #cmap = matplotlib.cm.get_cmap('OrRd')
+    #matplotlib.colors.Normalize(vmin=loss_cover.min(), vmax=loss_cover.max())
+    #color = matplotlib.colors.rgb2hex(cmap(0.025958))
+    #return dict(fillColor='#FFEDA0', weight=2, opacity=1, color='white', dashArray='3', fillOpacity=0.7)
+    macrobasin_id = get_macrobasin_id(feature)
+    loss_cover_value = get_loss_cover(macrobasin_id, year)
+    #print(loss_cover_value)
+    color = [colorscale[i] for i, item in enumerate(marks) if loss_cover_value > item][-1]
+    return dict(fillColor=color, weight=2, opacity=1, color='white', dashArray='3', fillOpacity=0.7)
+
+def get_info(feature=None, year=None):
+    if not feature:
+        return ["Hoover over a macrobasin"]
+
+    macrobasin_id = get_macrobasin_id(feature)
+    loss_cover_value = get_loss_cover(macrobasin_id, year)
+
+    return [html.H4("Macrobasin " + str(macrobasin_id)), 
+            "Loss Cover: {:.2f}".format(loss_cover_value * 100), html.Br(),
+            "Area: {:.1f} ha".format(feature["properties"]["Area"])
+            ]
+
+def get_macrobasin_id(feature=None):
+    return feature["properties"]["Macrocuenca"]
+
+loss_cover = data.loc[(data.year == year) & (data.month == 12), 'v_loss_cover']
+marks = get_color_marks(loss_cover, colorscale)
+
+basins_dropdown = dcc.Dropdown(
+        id='macro-basins',
+        options=basins_map_options,
+        value=basins_map_options[0]['value']
+    )
+
+#def show_map(path):
 basins_map_data = None
-with open(basins_map_path) as f:
+with open(basins_map_options[0]['value']) as f:
     basins_map_data = json.load(f)
 
-marks = [0, 7, 14, 21, 28, 35, 42, 48]
-colorscale = ['#FFEDA0', '#FED976', '#FEB24C', '#FD8D3C', '#FC4E2A', '#E31A1C', '#BD0026', '#800026']
+ctg = ["{:.0f}+".format(mark * 100, marks[i + 1]*100) for i, mark in enumerate(marks[:-1])]# + ["{:.0f}+".format(marks[-1] * 100)]
+colorbar = dlx.categorical_colorbar(categories=ctg, colorscale=colorscale, width=300, height=30, position="bottomleft")
+
+options = dict(hoverStyle=dict(weight=5, color='#666', dashArray=''), zoomToBoundsOnClick=True)
+basins_map_json = dlx.geojson(basins_map_data, id="basins_map", defaultOptions=options, style=get_style)
+
+info = html.Div(children=get_info(), id="info", className="info",
+            style={"position": "absolute", "top": "10px", "right": "10px", "z-index": "1000"})
+
+map_graph = [dl.Map(children=[dl.TileLayer(), basins_map_json, colorbar, info], center=[4.60971, -74.08175], zoom=5)]
+
+#map_graph = show_map(basins_map_options[0]['value'])
+
+@app.callback(Output("info", "children"), [Input("basins_map", "featureHover"), Input('year-slider', 'value')])
+def info_hover(feature, year):
+    return get_info(feature, year)
+
+
+
+
+
+
+
+############################### Graphs ###############################
+def plot_data(macrobasin, variables, year):
+    dfc = data.loc[macrobasin].copy()
+    
+    has_temperature = True
+    if np.isnan(dfc.iloc[0,6]):
+        has_temperature = False
+    #    variables.remove('v_temperature_mean')
+        variables = [v for v in variables if v['label'] != 'Temperature']
+
+    print('+'*30, macrobasin, year, [v['value'] for v in variables],'+'*30)
+
+    #print(dfc.head())
+
+    _fig = go.Figure()
+    for i, var in enumerate(variables):
+        _fig.add_trace(go.Scatter(
+            x=dfc['date'], y=dfc[var['value']], 
+            #range_x=[str(year)+'-01-01',str(year)+'-12-31'], 
+            name=var['label'],
+            yaxis='y' + str(i + 1),
+            #height=250
+            line=dict(color=var['color']),
+            line_shape='spline'
+        ))
+
+    _fig.update_layout(xaxis_range=[datetime.datetime(year, 1, 1), datetime.datetime(year, 12, 31)])
+
+    _fig.update_layout(legend=dict(
+        orientation="h",
+        yanchor="bottom",
+        y=1.02,
+        xanchor="right",
+        x=1
+    ))
+
+    _fig.update_xaxes(rangeslider_visible=True)
+
+    _fig.update_layout(
+        #autosize=True,
+        #width=500,
+        #height=500,
+        #paper_bgcolor="LightSteelBlue",
+        #xaxis=dict(
+        #    domain=[0.3, 0.7]
+        #),
+        yaxis1=dict(
+            #title=variables[0],
+            # titlefont=dict(
+            #     color=colors[0]
+            # ),
+            tickfont=dict(
+                color=variables[0]['color']
+            )
+        ),
+        yaxis2=dict(
+            #title=variables[1],
+            # titlefont=dict(
+            #     color="#4ABEEE"
+            # ),
+            tickfont=dict(
+                color=variables[1]['color']
+            ),
+            anchor="x",
+            overlaying="y",
+            side="right",
+        ),
+    )
+
+    if has_temperature:
+        _fig.update_layout(
+            yaxis3=dict(
+                #title=variables[2],
+                # titlefont=dict(
+                #     color="#FCA93A"
+                # ),
+                tickfont=dict(
+                    color=variables[2]['color']
+                ),
+                anchor="free",
+                overlaying="y",
+                side="right",
+                position=0.975
+            )
+    )
+
+    return _fig
+
+
+@app.callback(Output('graph', 'figure'), 
+    [Input('year-slider', 'value'), Input("basins_map", "featureClick")])
+def update_graph(y_value, feature=None):
+    macrobasin_id = 1
+    if not feature is None:
+        macrobasin_id = get_macrobasin_id(feature)
+    return plot_data(macrobasin_id, variables_graph, y_value)
+
+
+
+
 
 @app.callback(
     Output("more-info-modal", "is_open"),
@@ -237,90 +447,12 @@ def toggle_more_info(n1, n2, is_open):
     return is_open
 
 
-def get_style(feature):
-    #return dict(fillColor='#FFEDA0', weight=2, opacity=1, color='white', dashArray='3', fillOpacity=0.7)
-    color = [colorscale[i] for i, item in enumerate(marks) if feature["properties"]["Macrocuenca"] > item][-1]
-    return dict(fillColor=color, weight=2, opacity=1, color='white', dashArray='3', fillOpacity=0.7)
-
-def get_info(feature=None):
-    header = [html.H4("Macrobasin")]
-    #return header
-    if not feature:
-        return header + ["Hoover over a macrobasin"]
-    return header + [html.B(feature["properties"]["Macrocuenca"]), html.Br(),
-                     "{:.1f} ha".format(feature["properties"]["Area"])]
-
-def get_macrobasin_id(feature=None):
-    return feature["properties"]["Macrocuenca"]
-
-ctg = ["{}-{}+".format(mark, marks[i + 1]) for i, mark in enumerate(marks[:-1])] + ["{}+".format(marks[-1])]
-colorbar = dlx.categorical_colorbar(categories=ctg, colorscale=colorscale, width=300, height=30, position="bottomleft")
-
-options = dict(hoverStyle=dict(weight=5, color='#666', dashArray=''), zoomToBoundsOnClick=True)
-basins_map_json = dlx.geojson(basins_map_data, id="basins_map", defaultOptions=options, style=get_style)
-
-info = html.Div(children=get_info(), id="info", className="info",
-                style={"position": "absolute", "top": "10px", "right": "10px", "z-index": "1000"})
-
-map_graph = [dl.Map(children=[dl.TileLayer(), basins_map_json, colorbar, info], center=[4.60971, -74.08175], zoom=5)]
-
-@app.callback(Output("info", "children"), [Input("basins_map", "featureHover")])
-def info_hover(feature):
-    return get_info(feature)
-
-#graficos
-data = pd.read_csv(data_path,  parse_dates = ['date'])
-data.set_index(['mc'], inplace = True)
-
-def plot_data(macrobasin, variables, year, month=12):
-    dfc = data.loc[macrobasin].copy()
-    #_figs = []
-    #for i, var in enumerate(variables):
-    print('+'*30, macrobasin, variables, year, month,'+'*30)
-
-    var = variables[0]
-    _fig = px.line(dfc, x='date', y=var
-                    , range_x=[str(year)+'-01-01',str(year)+'-12-31']
-                    , height=250)
-        #_figs.append(_fig)
-    return _fig
-
-#flow_graph = dcc.Graph(id="flow-graph")
-#flow_graph.figure = plot_data(1, ['v_rainfall_total'], '2010', '1')
-
-
 #TODO: Capturar el cambio y filtrar la data, las gráficas estén supervisando esta data para que se propague
 
 @app.callback([Output('scenarios', 'style'), Output('cover-loss-scenario', 'style'), Output('year-slider-div', 'style')],[Input("predictive-descriptive-switch", 'value')])
 def on_switch(value):
     return {"display": "block" if value else "none"}, {"display": "block" if value else "none"}, {"display": "none" if value else "block"}
 
-
-@app.callback([Output('flow-graph', 'figure'), Output('flow-value', 'children')], 
-    [Input('year-slider', 'value'), Input("basins_map", "featureClick")])
-def update_flow_graph(y_value, feature=None):
-    macrobasin_id = 1
-    if not feature is None:
-        macrobasin_id = get_macrobasin_id(feature)
-    df = data.loc[macrobasin_id].copy()
-    flow = round(df[(df['date'] > f'{y_value}-01-01') & (df['date'] < f'{y_value}-12-31')]['v_flow_mean'].mean(),1)
-    return plot_data(macrobasin_id, ['v_flow_mean'], y_value), ["{:.1e}".format(flow), html.Small("mm")]
-
-@app.callback(Output('precipitation-graph', 'figure'),
-    [Input('year-slider', 'value'), Input("basins_map", "featureClick")])
-def update_precipitation_graph(y_value, feature=None):
-    macrobasin_id = 1
-    if not feature is None:
-        macrobasin_id = get_macrobasin_id(feature)
-    return plot_data(macrobasin_id, ['v_rainfall_total'], y_value)
-
-@app.callback(Output('temperature-graph', 'figure'),
-    [Input('year-slider', 'value'), Input("basins_map", "featureClick")])
-def update_temperature_graph(y_value, feature=None):
-    macrobasin_id = 1
-    if not feature is None:
-        macrobasin_id = get_macrobasin_id(feature)
-    return plot_data(macrobasin_id, ['v_temperature_mean'], y_value)
 
 @app.callback(Output('cover-loss-value', 'children'),[Input("cover-loss-scenario-value", 'value')])
 def on_cover_loss_slider(value):
@@ -342,7 +474,7 @@ main_card = html.Div(
             ]),
             dbc.Row([#map and graphs
                 dbc.Col([#map and month_slider
-                        #dbc.Row([dbc.Col(month_slider,)]),
+                        dbc.Row([dbc.Col(basins_dropdown,)]),
                         dbc.Row([
                             dbc.Col(
                                 html.Div(map_graph,
@@ -358,26 +490,11 @@ main_card = html.Div(
                 dbc.Col([#graphs
                     dbc.Row([
                             dbc.Col(
-                                dcc.Graph(id="flow-graph"),
+                                dcc.Graph(id="graph"),
                                 #style={"margin-left":" 10px"}
                             ),
                             ],no_gutters=True,
                         ),
-                    dbc.Row([
-                            dbc.Col(
-                                dcc.Graph(id="precipitation-graph"),
-                                #style={"margin-left":" 10px"}
-                            ),
-                            ],no_gutters=True,
-                        ),
-                    dbc.Row([
-                            dbc.Col(
-                                dcc.Graph(id="temperature-graph"),
-                                #style={"margin-left":" 10px"} figure=figs[2], 
-                            ),
-                            ],no_gutters=True,
-                        ),
-
                     ], 
                     md=6
                 )
