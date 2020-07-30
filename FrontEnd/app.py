@@ -248,7 +248,9 @@ data.set_index(['mc'], inplace = True)
 
 
 ###################### Map ###############################
-year = 2010
+year_current = 2010
+macrobasin_id_current = 1
+
 colorscale = ['#FFEDA0', '#FED976', '#FEB24C', '#FD8D3C', '#FC4E2A', '#E31A1C', '#BD0026', '#800026']
 
 def get_color_marks(x, cs):
@@ -279,17 +281,17 @@ def get_style(feature):
     #color = matplotlib.colors.rgb2hex(cmap(0.025958))
     #return dict(fillColor='#FFEDA0', weight=2, opacity=1, color='white', dashArray='3', fillOpacity=0.7)
     macrobasin_id = get_macrobasin_id(feature)
-    loss_cover_value = get_loss_cover(macrobasin_id, year)
+    loss_cover_value = get_loss_cover(macrobasin_id, year_current)
     #print(loss_cover_value)
     color = [colorscale[i] for i, item in enumerate(marks) if loss_cover_value > item][-1]
     return dict(fillColor=color, weight=2, opacity=1, color='white', dashArray='3', fillOpacity=0.7)
 
-def get_info(feature=None, year=None):
+def get_info(feature=None):
     if not feature:
-        return None #["Hoover over a macrobasin"]
+        return None#["Hoover over a macrobasin"]
 
     macrobasin_id = get_macrobasin_id(feature)
-    loss_cover_value = get_loss_cover(macrobasin_id, year)
+    loss_cover_value = get_loss_cover(macrobasin_id, year_current)
 
     return [html.H4("Macrobasin " + str(macrobasin_id)), 
             "Loss Cover: {:.2f}".format(loss_cover_value * 100), html.Br(),
@@ -299,8 +301,8 @@ def get_info(feature=None, year=None):
 def get_macrobasin_id(feature=None):
     return feature["properties"]["Macrocuenca"]
 
-loss_cover = data.loc[(data.year == year) & (data.month == 12), 'v_loss_cover']
-marks = get_color_marks(loss_cover, colorscale)
+loss_cover_all = data['v_loss_cover']
+marks = get_color_marks(loss_cover_all, colorscale)
 
 basins_dropdown = dcc.Dropdown(
         id='macro-basins',
@@ -319,30 +321,45 @@ info = html.Div(children=get_info(), id="info", className="info",
 
 #def show_map(path):
 #basins_map_data = None
-map_graph = None
+#map_graph = None
 with open(basins_map_options[0]['value']) as f:
     _ = json.load(f)
     basins_map_json = dlx.geojson(_, id="basins_map", defaultOptions=options, style=get_style)
-    map_graph = [dl.Map(children=[dl.TileLayer(), basins_map_json, colorbar, info], center=[4.60971, -74.08175], zoom=5)]
+map_graph = dl.Map(children=[dl.TileLayer(), basins_map_json, colorbar, info], center=[4.60971, -74.08175], zoom=5)
 
+
+print(type(map_graph))
 
 #map_graph = show_map(basins_map_options[0]['value'])
 
-@app.callback(Output("info", "children"), [Input("basins_map", "featureHover"), Input('year-slider', 'value')])
-def info_hover(feature, year):
-    return get_info(feature, year)
+@app.callback(Output("info", "children"), [Input("basins_map", "featureHover")])
+def info_hover(feature:None):
+    global year_current
+    global macrobasin_id_current
+    
+    if not feature == None:
+        macrobasin_id_current = get_macrobasin_id(feature)
+    
+    #if not year == None:
+    #    year_current = year
+
+    return get_info(feature)
 
 
 @app.callback(
     Output('basins_map', 'children'),
-    [Input('macro-basins', 'value')])
-def update_output(value):
-    print(value)
-    with open(value) as f:
+    [Input('macro-basins', 'value'), Input('year-slider', 'value')])
+def update_map(map_path, year):
+    global year_current
+    global macrobasin_id_current
+    year_current = year
+    macrobasin_id_current = None#get_macrobasin_id(feature)
+
+    with open(map_path) as f:
         _ = json.load(f)
         basins_map_json = dlx.geojson(_, id="basins_map", defaultOptions=options, style=get_style)
 
-    return dl.Map(dl.Map(children=[dl.TileLayer(), basins_map_json, colorbar, info], center=[4.60971, -74.08175], zoom=5))
+    return [dl.Map(children=[dl.TileLayer(), basins_map_json, colorbar, info], center=[4.60971, -74.08175], zoom=5)]
 
 
 
