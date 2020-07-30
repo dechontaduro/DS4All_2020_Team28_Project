@@ -328,7 +328,7 @@ with open(basins_map_options[0]['value']) as f:
 map_graph = dl.Map(children=[dl.TileLayer(), basins_map_json, colorbar, info], center=[4.60971, -74.08175], zoom=5)
 
 
-print(type(map_graph))
+#print(type(map_graph))
 
 #map_graph = show_map(basins_map_options[0]['value'])
 
@@ -379,13 +379,18 @@ def plot_data(macrobasin, variables, year):
     #print(dfc.head())
 
     _fig = go.Figure()
+    _fig.update_layout(
+        autosize=True,
+        #width=500,
+        #height=500,
+        margin=go.layout.Margin(l=0,r=40,b=0,t=50,pad=0)
+    )
+
     for i, var in enumerate(variables):
         _fig.add_trace(go.Scatter(
             x=dfc['date'], y=dfc[var['value']], 
-            #range_x=[str(year)+'-01-01',str(year)+'-12-31'], 
             name=var['label'],
             yaxis='y' + str(i + 1),
-            #height=250
             line=dict(color=var['color']),
             line_shape='spline'
         ))
@@ -395,7 +400,7 @@ def plot_data(macrobasin, variables, year):
     _fig.update_layout(legend=dict(
         orientation="h",
         yanchor="bottom",
-        y=1.02,
+        y=1,
         xanchor="right",
         x=1
     ))
@@ -403,27 +408,12 @@ def plot_data(macrobasin, variables, year):
     _fig.update_xaxes(rangeslider_visible=True)
 
     _fig.update_layout(
-        #autosize=True,
-        #width=500,
-        #height=500,
-        #paper_bgcolor="LightSteelBlue",
-        #xaxis=dict(
-        #    domain=[0.3, 0.7]
-        #),
         yaxis1=dict(
-            #title=variables[0],
-            # titlefont=dict(
-            #     color=colors[0]
-            # ),
             tickfont=dict(
                 color=variables[0]['color']
             )
         ),
         yaxis2=dict(
-            #title=variables[1],
-            # titlefont=dict(
-            #     color="#4ABEEE"
-            # ),
             tickfont=dict(
                 color=variables[1]['color']
             ),
@@ -437,16 +427,14 @@ def plot_data(macrobasin, variables, year):
         _fig.update_layout(
             yaxis3=dict(
                 #title=variables[2],
-                # titlefont=dict(
-                #     color="#FCA93A"
-                # ),
+                # titlefont=dict(color="#FCA93A"),
                 tickfont=dict(
                     color=variables[2]['color']
                 ),
                 anchor="free",
                 overlaying="y",
                 side="right",
-                position=0.975
+                position=0.945
             )
     )
 
