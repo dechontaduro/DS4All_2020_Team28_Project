@@ -21,15 +21,20 @@ import datetime
 import about
 
 
+PREDICT_YEAR_START = 2020
+
 data_path = '../data/matrix/matrix_consol_v2.zip'
 model_rank_path = '../model/model_rank.csv'
 data_forecast_path = '../model/forecast.csv'
+
+#forecast_group_column_format = 'Forecast_{Rank}_{model_type}_CC{loss_cover_scenario}'
+forecast_group_column_format = 'Forecast_{}_{}_CC{}'
 
 variables_graph = [
     {'variable':'flow', 'label':'Flow', 'color': ['#B855A4'], 'axis': '1'}, 
     {'variable':'rainfall', 'label':'Rain Fall',  'color': ['#4ABEEE'], 'axis': '2'}, 
     {'variable':'temperature', 'label':'Temperature', 'color': ['#FCA93A'], 'axis': '3'},
-    {'variable':'fc', 'color': ['#394ACA', '#33D045', '#99D045'], 'axis': '1'}, 
+    {'variable':'Forecast', 'color': ['#394ACA', '#33D045', '#99D045'], 'axis': '1'}, 
     ]
     
 #
@@ -82,7 +87,8 @@ scn_slider = html.Div([
             max=4,
             step=None,
             marks=scenarios,
-            value=2,
+            value=1,
+            id='climate-scenario-value'
         )
     ], 
     style= {'display': 'none'},
@@ -299,7 +305,8 @@ model_rank = pd.read_csv(model_rank_path)
 
 data_forecast = pd.read_csv(data_forecast_path,  parse_dates = ['date'])
 data_forecast = data_forecast.merge(model_rank, left_on=['MC','model_type'], right_on=['MC','Model'], how = 'inner')
-data_forecast['Rank_model'] = 'fc_'+data_forecast['Rank'].astype(str) +'_' + data_forecast['model_type']
+#data_forecast['Group'] = forecast_group_column_format.format('Rank': data_forecast['Rank'], 'model_type': data_forecast['model_type'], 'loss_cover_scenario': data_forecast['loss_cover_scenario'])
+data_forecast['Group'] = data_forecast.apply(lambda x: forecast_group_column_format.format(x['Rank'], x['model_type'], x['loss_cover_scenario']), axis=1)
 
 
 
@@ -325,6 +332,8 @@ def get_color_marks(x, cs):
 
 
 def get_loss_cover(macrobasin, year):
+    year = year if year < PREDICT_YEAR_START else PREDICT_YEAR_START - 1
+    print(year)
     dfc = data.loc[macrobasin].copy()
     dfc = dfc.loc[(dfc.year == year) & (dfc.month == 12), 'v_loss_cover']
     #print(dfc)
@@ -332,13 +341,9 @@ def get_loss_cover(macrobasin, year):
     
 
 def get_style(feature):
-    #cmap = matplotlib.cm.get_cmap('OrRd')
-    #matplotlib.colors.Normalize(vmin=loss_cover.min(), vmax=loss_cover.max())
-    #color = matplotlib.colors.rgb2hex(cmap(0.025958))
-    #return dict(fillColor='#FFEDA0', weight=2, opacity=1, color='white', dashArray='3', fillOpacity=0.7)
     macrobasin_id = get_macrobasin_id(feature)
     loss_cover_value = get_loss_cover(macrobasin_id, year_current)
-    #print(loss_cover_value)
+    
     color = [colorscale[i] for i, item in enumerate(marks) if loss_cover_value > item][-1]
     return dict(fillColor=color, weight=2, opacity=1, color='white', dashArray='3', fillOpacity=0.7)
 
@@ -421,28 +426,29 @@ def update_map(map_path, year):
 
 
 ############################### Graphs ###############################
-def plot_data(macrobasin, variables, year):
+def plot_data(macrobasin, variables, year, climate_change):
     dfc = data.loc[macrobasin].copy()
     dfc.reset_index(drop=True, inplace=True)
     
-    data_forecast_mc = \
-    data_forecast.loc[(data_forecast.MC == macrobasin) & 
-                      (data_forecast.climate_change_scenario == 1) & (data_forecast.loss_cover_scenario == 0),
-                     ['date','year','month','flow','Rank_model']]
-    data_forecast_mc = \
-        data_forecast_mc.pivot_table(index=['date','year','month'], columns='Rank_model', values='flow', aggfunc='first')
-    data_forecast_mc.reset_index(inplace=True)
-    
+    print('+'*30, macrobasin, year, climate_change, [v['variable'] for v in variables],'+'*30)
 
-    if data_forecast_mc.shape[0] > 0:
-        dfc = pd.concat([dfc,data_forecast_mc])
+    if year >= PREDICT_YEAR_START:
+        data_forecast_mc = \
+        data_forecast.loc[(data_forecast.MC == macrobasin) & (data_forecast.Rank == 1) & 
+                        (data_forecast.climate_change_scenario == climate_change), #& (data_forecast.loss_cover_scenario == 0)
+                        ['date','year','month','flow','Group']]
+        data_forecast_mc = \
+            data_forecast_mc.pivot_table(index=['date','year','month'], columns='Group', values='flow', aggfunc='first')
+        data_forecast_mc.reset_index(inplace=True)
+
+        if data_forecast_mc.shape[0] > 0:
+            dfc = pd.concat([dfc,data_forecast_mc])
 
     has_temperature = True
     if False:#np.isnan(dfc.iloc[0,6]):
         has_temperature = False
         variables = [v for v in variables if v['label'] != 'Temperature']
 
-    print('+'*30, macrobasin, year, [v['variable'] for v in variables],'+'*30)
 
     _fig = go.Figure()
     _fig.update_layout(
@@ -519,15 +525,12 @@ def plot_data(macrobasin, variables, year):
 
 
 @app.callback(Output('graph', 'figure'), 
-    [Input('year-slider', 'value'), Input("basins_map", "featureClick")])
-def update_graph(y_value, feature=None):
+    [Input('year-slider', 'value'), Input('climate-scenario-value', 'value'), Input("basins_map", "featureClick")])
+def update_graph(y_value, climate_change, feature=None):
     macrobasin_id = 1
     if not feature is None:
         macrobasin_id = get_macrobasin_id(feature)
-    return plot_data(macrobasin_id, variables_graph, y_value)
-
-
-
+    return plot_data(macrobasin_id, variables_graph, y_value, climate_change)
 
 
 @app.callback(
