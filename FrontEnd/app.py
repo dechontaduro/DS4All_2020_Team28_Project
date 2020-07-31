@@ -387,12 +387,9 @@ def plot_data(macrobasin, variables, year):
     data_forecast_mc.reset_index(inplace=True)
     
 
-    if data_forecast_mc.shape[0] == 0:
-        return go.Figure()
+    if data_forecast_mc.shape[0] > 0:
+        dfc = pd.concat([dfc,data_forecast_mc])
 
-    dfc = pd.concat([dfc,data_forecast_mc])
-
-    
     has_temperature = True
     if False:#np.isnan(dfc.iloc[0,6]):
         has_temperature = False
