@@ -20,11 +20,17 @@ import datetime
 
 
 data_path = '../data/matrix/matrix_consol_v2.zip'
-variables_graph = [
-    {'label':'Flow', 'value':'v_flow_mean', 'color': '#B855A4'}, 
-    {'label':'Rain Fall', 'value':'v_rainfall_total', 'color': '#4ABEEE'}, 
-    {'label':'Temperature', 'value':'v_temperature_mean', 'color': '#FCA93A'}]
+model_rank_path = '../model/model_rank.csv'
+data_forecast_path = '../model/forecast.csv'
 
+variables_graph = [
+    {'variable':'flow', 'label':'Flow', 'color': ['#B855A4'], 'axis': '1'}, 
+    {'variable':'rainfall', 'label':'Rain Fall',  'color': ['#4ABEEE'], 'axis': '2'}, 
+    {'variable':'temperature', 'label':'Temperature', 'color': ['#FCA93A'], 'axis': '3'},
+    {'variable':'fc', 'color': ['#394ACA', '#33D045', '#99D045'], 'axis': '1'}, 
+    ]
+    
+#
 basins_map_options = [
     #{'label':'todas', 'value':'../data/shapes/Macro_Cuencas2.json'},
     {'label':'Macrobasins 1-38,42,45', 'value':'../data/shapes/Cuencas_ 1a38_42_45.json'},
@@ -242,8 +248,11 @@ more_info = html.Div(
 data = pd.read_csv(data_path,  parse_dates = ['date'])
 data.set_index(['mc'], inplace = True)
 
+model_rank = pd.read_csv(model_rank_path)
 
-
+data_forecast = pd.read_csv(data_forecast_path,  parse_dates = ['date'])
+data_forecast = data_forecast.merge(model_rank, left_on=['MC','model_type'], right_on=['MC','Model'], how = 'inner')
+data_forecast['Rank_model'] = 'fc_'+data_forecast['Rank'].astype(str) +'_' + data_forecast['model_type']
 
 
 
@@ -367,16 +376,29 @@ def update_map(map_path, year):
 ############################### Graphs ###############################
 def plot_data(macrobasin, variables, year):
     dfc = data.loc[macrobasin].copy()
+    dfc.reset_index(drop=True, inplace=True)
+    
+    data_forecast_mc = \
+    data_forecast.loc[(data_forecast.MC == macrobasin) & 
+                      (data_forecast.climate_change_scenario == 1) & (data_forecast.loss_cover_scenario == 0),
+                     ['date','year','month','flow','Rank_model']]
+    data_forecast_mc = \
+        data_forecast_mc.pivot_table(index=['date','year','month'], columns='Rank_model', values='flow', aggfunc='first')
+    data_forecast_mc.reset_index(inplace=True)
+    
+
+    if data_forecast_mc.shape[0] == 0:
+        return go.Figure()
+
+    dfc = pd.concat([dfc,data_forecast_mc])
+
     
     has_temperature = True
-    if np.isnan(dfc.iloc[0,6]):
+    if False:#np.isnan(dfc.iloc[0,6]):
         has_temperature = False
-    #    variables.remove('v_temperature_mean')
         variables = [v for v in variables if v['label'] != 'Temperature']
 
-    print('+'*30, macrobasin, year, [v['value'] for v in variables],'+'*30)
-
-    #print(dfc.head())
+    print('+'*30, macrobasin, year, [v['variable'] for v in variables],'+'*30)
 
     _fig = go.Figure()
     _fig.update_layout(
@@ -386,14 +408,25 @@ def plot_data(macrobasin, variables, year):
         margin=go.layout.Margin(l=0,r=40,b=0,t=50,pad=0)
     )
 
-    for i, var in enumerate(variables):
-        _fig.add_trace(go.Scatter(
-            x=dfc['date'], y=dfc[var['value']], 
-            name=var['label'],
-            yaxis='y' + str(i + 1),
-            line=dict(color=var['color']),
-            line_shape='spline'
-        ))
+    #for i, var in enumerate(variables):
+    color_var_index = {}
+    for c in dfc.columns:
+        v = next((v for v in variables if v["variable"] in c), None)
+        if v:
+            if v["variable"] in color_var_index:
+                color_var_index[v["variable"]] += 1
+            else:
+                color_var_index[v["variable"]] = 0
+
+            color = v['color'][color_var_index[v["variable"]]]
+            
+            _fig.add_trace(go.Scatter(
+                x=dfc['date'], y=dfc[c], 
+                name=c if not 'label' in v else v['label'],
+                yaxis='y' + v['axis'],
+                line=dict(color=color),
+                line_shape='spline'
+            ))
 
     _fig.update_layout(xaxis_range=[datetime.datetime(year, 1, 1), datetime.datetime(year, 12, 31)])
 
@@ -410,12 +443,12 @@ def plot_data(macrobasin, variables, year):
     _fig.update_layout(
         yaxis1=dict(
             tickfont=dict(
-                color=variables[0]['color']
+                color=variables[0]['color'][0]
             )
         ),
         yaxis2=dict(
             tickfont=dict(
-                color=variables[1]['color']
+                color=variables[1]['color'][0]
             ),
             anchor="x",
             overlaying="y",
@@ -429,7 +462,7 @@ def plot_data(macrobasin, variables, year):
                 #title=variables[2],
                 # titlefont=dict(color="#FCA93A"),
                 tickfont=dict(
-                    color=variables[2]['color']
+                    color=variables[2]['color'][0]
                 ),
                 anchor="free",
                 overlaying="y",
