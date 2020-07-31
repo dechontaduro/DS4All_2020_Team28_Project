@@ -28,7 +28,7 @@ model_rank_path = '../model/model_rank.csv'
 data_forecast_path = '../model/forecast.csv'
 
 #forecast_group_column_format = 'Forecast_{Rank}_{model_type}_CC{loss_cover_scenario}'
-forecast_group_column_format = 'Forecast_{}_{}_CC{}'
+forecast_group_column_format = 'Forecast_{}_{}_LossCover{}'
 
 variables_graph = [
     {'variable':'flow', 'label':'Flow', 'color': ['#B855A4'], 'axis': '1'}, 
