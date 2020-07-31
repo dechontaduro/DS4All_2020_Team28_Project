@@ -405,7 +405,7 @@ def plot_data(macrobasin, variables, year):
         autosize=True,
         #width=500,
         #height=500,
-        margin=go.layout.Margin(l=0,r=40,b=0,t=50,pad=0)
+        margin=go.layout.Margin(l=0,r=40,b=0,t=70,pad=0)
     )
 
     #for i, var in enumerate(variables):
