@@ -18,6 +18,8 @@ import pandas as pd
 import numpy as np
 import datetime
 
+import about
+
 
 data_path = '../data/matrix/matrix_consol_v2.zip'
 model_rank_path = '../model/model_rank.csv'
@@ -42,7 +44,7 @@ basins_map_options = [
 
 
 #################  DEFINE THE DASH APP  ####################
-app = dash.Dash(external_stylesheets=[dbc.themes.MATERIA])
+app = dash.Dash(external_stylesheets=[dbc.themes.MATERIA, "https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css"])
 # image_directory =  os.getcwd() + '/img/'
 # list_of_images = [os.path.basename(x) for x in glob.glob('{}*.*'.format(image_directory))]
 # static_image_route = '/static/'
@@ -179,12 +181,16 @@ switch = html.Div([
     )
 ])
 
+y_slider_marks = {value: str(value) for value in range(2000, 2020)}
+y_slider_marks[2020] = {"label": "*2020", 'style': {'color': '#f00', 'font-weight': 'bold'}}
+y_slider_marks[2021] = {"label": "*2021", 'style': {'color': '#f00', 'font-weight': 'bold'}}
+
 year_slider = html.Div([
     dcc.Slider(
         min=2000,
-        max=2019,
+        max=2021,
         step=None,
-        marks={value: str(value) for value in range(2000, 2020)},
+        marks=y_slider_marks,
         value=2010,
         className="slider-ds4a",
         id='year-slider',
@@ -210,7 +216,7 @@ year_slider = html.Div([
 
 more_info = html.Div(
     [
-        dbc.Button(html.I("+", className = "material-icons pmd-sm "), 
+        dbc.Button(html.I(className="fa fa-info-circle", style={"font-size": "32px"}), 
             id="open-more-info", className="btn pmd-btn-fab pmd-ripple-effect btn-info pmd-btn-raised more-info"
         ),
         dbc.Modal(#put here the content
@@ -238,6 +244,47 @@ more_info = html.Div(
     ]
 )
 
+##########################################################
+########################## ABOUT #########################
+##########################################################
+about_div = html.Div(
+    [
+        dbc.Button([html.I(className="fa fa-users", style={"font-size": "16px", "margin-right": "5px"}), "   OUR TEAM"],
+            id="open-our-team", color="primary", className="mr-1", style={"margin": "15px"}
+        ),
+        dbc.Modal(#put here the content
+            [
+                dbc.ModalHeader("OUR TEAM"),
+                dbc.ModalBody(
+                    html.Div(
+                        [
+                            dbc.Row(
+                                [ # dbc.Col(html.Img(src=f"assets/img/col-gov-logo.png", width="200px")),
+                                    about.create_team_mate_card('Diana Camila', 'diana.jpg', 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat'), 
+                                    about.create_team_mate_card('Jesus Alfonso', 'jesus.jpg', 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat'), 
+                                    about.create_team_mate_card('Jhon William', 'jhon.jpg', 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat'), 
+                                ],
+                            ),
+                            dbc.Row(
+                                [ # dbc.Col(html.Img(src=f"assets/img/col-gov-logo.png", width="200px")),
+                                    about.create_team_mate_card('Diego', 'diego.jpg', 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat'), 
+                                    about.create_team_mate_card('Juan Carlos', 'juan.jpg', 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat'), 
+                                    about.create_team_mate_card('William', 'william.jpg', 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat'), 
+                                ],
+                            )
+                        ], 
+                    ),
+                ),
+                dbc.ModalFooter(
+                    dbc.Button("Close", id="close-our-team", className="ml-auto")
+                ),
+            ],
+            id="our-team-modal",
+            size="xl", #"lg" lg -> large,  xl -> extra-large
+            #scrollable=True, #comment if you want 
+        ),   
+    ]
+)
 
 
 
@@ -492,12 +539,23 @@ def toggle_more_info(n1, n2, is_open):
         return not is_open
     return is_open
 
+@app.callback(
+    Output("our-team-modal", "is_open"),
+    [Input("open-our-team", "n_clicks"), Input("close-our-team", "n_clicks")],
+    [State("our-team-modal", "is_open")])
+def toggle_more_info(n1, n2, is_open):
+    if n1 or n2:
+        return not is_open
+    return is_open
+
+
+
 
 #TODO: Capturar el cambio y filtrar la data, las gráficas estén supervisando esta data para que se propague
 
-@app.callback([Output('scenarios', 'style'), Output('cover-loss-scenario', 'style'), Output('year-slider-div', 'style')],[Input("predictive-descriptive-switch", 'value')])
+#@app.callback([Output('scenarios', 'style'), Output('cover-loss-scenario', 'style')],[Input("predictive-descriptive-switch", 'value')])
 def on_switch(value):
-    return {"display": "block" if value else "none"}, {"display": "block" if value else "none"}, {"display": "none" if value else "block"}
+    return {"display": "block" if value else "none"}, {"display": "block" if value else "none"}
 
 
 @app.callback(Output('cover-loss-value', 'children'),[Input("cover-loss-scenario-value", 'value')])
@@ -509,24 +567,25 @@ def on_cover_loss_slider(value):
 main_card = html.Div(
         dbc.Card([
             dbc.Row([ #switch and timeline
-                dbc.Col(#md2 predictive/descriptive switch
-                    switch, 
-                    md=2
-                ),
+                #dbc.Col(#md2 predictive/descriptive switch
+                #    switch, 
+                #    md=2
+                #),
                 dbc.Col(#md10 years slider
                     year_slider,
-                    md=10,
+                    #md=10,
                 ),
             ]),
             dbc.Row([#map and graphs
                 dbc.Col([#map and month_slider
                         dbc.Row([dbc.Col(basins_dropdown,)]),
                         dbc.Row([
-                            dbc.Col(
+                            dbc.Col([
                                 html.Div(map_graph,
                                 style={'width': '100%', 'height': '50vh', 'margin': "auto", "display": "block", "margin-left": "15px"}, id="map"
-                                )
-                            ),
+                                ),
+                                about_div,
+                            ]),
                             ],
                         ),
 
@@ -565,4 +624,4 @@ app.layout = dbc.Container(
 )
 
 if __name__ in ["__main__"]:
-    app.run_server(debug=True)
+    app.run_server(debug=False)
