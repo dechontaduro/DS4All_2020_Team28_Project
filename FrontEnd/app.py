@@ -40,10 +40,10 @@ variables_graph = [
 #
 basins_map_options = [
     #{'label':'todas', 'value':'../data/shapes/Macro_Cuencas2.json'},
-    {'label':'Macrobasins 1-38,42,45', 'value':'../data/shapes/Cuencas_ 1a38_42_45.json'},
-    {'label':'Macrobasins 39,43,46', 'value':'../data/shapes/Cuencas_39_43_46.json'},
-    {'label':'Macrobasins 40,44,47', 'value':'../data/shapes/Cuencas_40_44_47.json'},
-    {'label':'Macrobasins 41,48', 'value':'../data/shapes/Cuencas_41_48.json'}]
+    {'label':'Macrobasins 1-38,42,45', 'value':'../data/shapes/Cuencas_ 1a38_42_45.json,1'},
+    {'label':'Macrobasins 39,43,46', 'value':'../data/shapes/Cuencas_39_43_46.json,39'},
+    {'label':'Macrobasins 40,44,47', 'value':'../data/shapes/Cuencas_40_44_47.json,40'},
+    {'label':'Macrobasins 41,48', 'value':'../data/shapes/Cuencas_41_48.json,41'}]
 
 
 
@@ -148,6 +148,7 @@ cards = html.Div([
                 ]),
                 html.Div([
                     html.H3("Select a Macrobasin in the map", style={"color":"purple"}, id="macrobasin-title"), 
+                    html.Div(id='macrobasin-current', children='1', style={'display': 'none'})
                 ])
             ], 
             md=6),
@@ -328,6 +329,9 @@ data.set_index(['mc'], inplace = True)
 model_rank = pd.read_csv(model_rank_path)
 
 data_forecast = pd.read_csv(data_forecast_path,  parse_dates = ['date'])
+data_forecast.rename(columns={'mc':'MC','v_flow_mean_pred':'flow','v_loss_cover_assum':'v_loss_cover',
+                        'v_rainfall_total_assum':'v_rainfall_total'}, inplace=True)
+
 data_forecast = data_forecast.merge(model_rank, left_on=['MC','model_type'], right_on=['MC','Model'], how = 'inner')
 #data_forecast['Group'] = forecast_group_column_format.format('Rank': data_forecast['Rank'], 'model_type': data_forecast['model_type'], 'loss_cover_scenario': data_forecast['loss_cover_scenario'])
 data_forecast['Group'] = data_forecast.apply(lambda x: forecast_group_column_format.format(x['Rank'], x['model_type'], x['loss_cover_scenario']), axis=1)
@@ -336,7 +340,7 @@ data_forecast['Group'] = data_forecast.apply(lambda x: forecast_group_column_for
 
 ###################### Map ###############################
 year_current = 2010
-macrobasin_id_current = 1
+#macrobasin_id_current = 1
 
 colorscale = ['#FFEDA0', '#FED976', '#FEB24C', '#FD8D3C', '#FC4E2A', '#E31A1C', '#BD0026', '#800026']
 
@@ -357,7 +361,7 @@ def get_color_marks(x, cs):
 
 def get_loss_cover(macrobasin, year):
     year = year if year < PREDICT_YEAR_START else PREDICT_YEAR_START - 1
-    print(year)
+    #print(year)
     dfc = data.loc[macrobasin].copy()
     dfc = dfc.loc[(dfc.year == year) & (dfc.month == 12), 'v_loss_cover']
     #print(dfc)
@@ -365,25 +369,26 @@ def get_loss_cover(macrobasin, year):
     
 
 def get_style(feature):
+    global year_current
     macrobasin_id = get_macrobasin_id(feature)
     loss_cover_value = get_loss_cover(macrobasin_id, year_current)
     
     color = [colorscale[i] for i, item in enumerate(marks) if loss_cover_value > item][-1]
     return dict(fillColor=color, weight=2, opacity=1, color='white', dashArray='3', fillOpacity=0.7)
 
-def get_info(feature=None):
-    if not feature:
+def get_info(feature=None, year=None):
+    if feature is None:
         return None#["Hoover over a macrobasin"]
 
     macrobasin_id = get_macrobasin_id(feature)
-    loss_cover_value = get_loss_cover(macrobasin_id, year_current)
+    loss_cover_value = get_loss_cover(macrobasin_id, year)
 
     return [html.H4("Macrobasin " + str(macrobasin_id)), 
             "Loss Cover: {:.2f}".format(loss_cover_value * 100), html.Br(),
             "Area: {:.1f} ha".format(feature["properties"]["Area"])
             ]
 
-def get_macrobasin_id(feature=None):
+def get_macrobasin_id(feature):
     return feature["properties"]["Macrocuenca"]
 
 loss_cover_all = data['v_loss_cover']
@@ -407,7 +412,7 @@ info = html.Div(children=get_info(), id="info", className="info",
 #def show_map(path):
 #basins_map_data = None
 #map_graph = None
-with open(basins_map_options[0]['value']) as f:
+with open(basins_map_options[0]['value'].split(",")[0]) as f:
     _ = json.load(f)
     basins_map_json = dlx.geojson(_, id="basins_map", defaultOptions=options, style=get_style)
 map_graph = dl.Map(children=[dl.TileLayer(), basins_map_json, colorbar, info], center=[4.60971, -74.08175], zoom=5)
@@ -417,36 +422,34 @@ map_graph = dl.Map(children=[dl.TileLayer(), basins_map_json, colorbar, info], c
 
 #map_graph = show_map(basins_map_options[0]['value'])
 
-@app.callback(Output("info", "children"), [Input("basins_map", "featureHover")])
-def info_hover(feature:None):
-    global year_current
-    global macrobasin_id_current
+@app.callback(Output("info", "children"), [Input("basins_map", "featureHover"), Input('year-slider', 'value')])
+def info_hover(feature, year):
+    #global year_current
+    #global macrobasin_id_current
     
-    if not feature == None:
-        macrobasin_id_current = get_macrobasin_id(feature)
+    #macrobasin_id = None
+    #if feature is None:
+    #    macrobasin_id = get_macrobasin_id(feature)
     
     #if not year == None:
     #    year_current = year
 
-    return get_info(feature)
+    return get_info(feature, year)
 
 
 @app.callback(
-    Output('basins_map', 'children'),
+    [Output('basins_map', 'children')], #Output('macrobasin-current', 'children')
     [Input('macro-basins', 'value'), Input('year-slider', 'value')])
-def update_map(map_path, year):
-    global year_current
-    global macrobasin_id_current
-    year_current = year
-    #macrobasin_id_current = None#get_macrobasin_id(feature)
-
+def update_map(map_value, year):
+    map_path, macrobasin_id = map_value.split(",")
     with open(map_path) as f:
         _ = json.load(f)
         basins_map_json = dlx.geojson(_, id="basins_map", defaultOptions=options, style=get_style)
 
-    return [dl.Map(children=[dl.TileLayer(), basins_map_json, colorbar, info], center=[4.60971, -74.08175], zoom=5)]
-
-
+    #TODO: Buscar la primera macrozona del mapa
+    return [dl.Map(children=[dl.TileLayer(), basins_map_json, colorbar, info], 
+                    center=[4.60971, -74.08175], zoom=5)]
+    #macrobasin_id
 
 
 ############################### Graphs ###############################
@@ -560,15 +563,24 @@ def plot_data(macrobasin, variables, year, climate_change):
     return _fig
 
 
+@app.callback(Output('macrobasin-current', 'children'), [Input('basins_map', 'featureClick')], [State('macrobasin-current', 'children')])
+def select_macrobasin(feature:None, macrobasin_id_ini):
+    if feature is None:
+        macrobasin_id = int(macrobasin_id_ini)
+    else: 
+        macrobasin_id = get_macrobasin_id(feature)
+    return macrobasin_id
+
 @app.callback([Output('graph', 'figure'), Output('cover-loss-value', 'children'), Output('flow-value', 'children'), 
                Output('precipitation-value', 'children'), Output('temperature-value', 'children'), 
                Output('macrobasin-title', 'children')],
-    [Input('year-slider', 'value'), Input('scenarios-slider', 'value'), Input("basins_map", "featureClick")])
-def update_graph(y_value, climate_change, feature=None):
-    global macrobasin_id_current
-    macrobasin_id = macrobasin_id_current if macrobasin_id_current != None else 1
-    if not feature is None:
-        macrobasin_id = get_macrobasin_id(feature)
+    [Input('year-slider', 'value'), Input('scenarios-slider', 'value'), Input("macrobasin-current", "children")])
+def update_graph(y_value, climate_change, macrobasin_id):
+    global year_current
+    year_current = y_value
+    #macrobasin_id = macrobasin_id_current if macrobasin_id_current != None else 1
+    #if not feature is None:
+    #    macrobasin_id = get_macrobasin_id(feature)
     loss_cover = get_loss_cover(macrobasin_id, y_value)
     loss_cover = round(loss_cover*100, 1) if loss_cover else '-'
     flow = get_flow(macrobasin_id, y_value)
