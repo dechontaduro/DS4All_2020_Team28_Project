@@ -80,7 +80,7 @@ header = html.Div([
     className="container_ds4a container")
 ###########    CARDS   #############
 #climate scenario slider
-scenarios = {1:'1', 2:'2', 3:'3', 4:'4'}
+scenarios = {1:'A1', 2:'A2', 3:'B1', 4:'B2'}
 scn_slider = html.Div([
         dcc.Slider(
             min=1,
@@ -350,6 +350,9 @@ data_forecast.rename(columns={'mc':'MC','v_flow_mean_pred':'flow','v_loss_cover_
                         'v_rainfall_total_assum':'v_rainfall_total'}, inplace=True)
 
 data_forecast = data_forecast.merge(model_rank, left_on=['MC','model_type'], right_on=['MC','Model'], how = 'inner')
+data_forecast.loc[data_forecast.Model.isna(), ['Rank']] = 1
+data_forecast.loc[data_forecast.Model.isna(), ['Model']] = data_forecast[data_forecast.Model.isna()]['model_type']
+
 #data_forecast['Group'] = forecast_group_column_format.format('Rank': data_forecast['Rank'], 'model_type': data_forecast['model_type'], 'loss_cover_scenario': data_forecast['loss_cover_scenario'])
 data_forecast['Group'] = data_forecast.apply(lambda x: forecast_group_column_format.format(x['Rank'], x['model_type'], x['loss_cover_scenario']), axis=1)
 
@@ -479,7 +482,7 @@ def plot_data(macrobasin, variables, year, climate_change):
     if year >= PREDICT_YEAR_START:
         data_forecast_mc = \
         data_forecast.loc[(data_forecast.MC == macrobasin) & (data_forecast.Rank == 1) & 
-                        (data_forecast.climate_change_scenario == 'A'+str(climate_change)), #& (data_forecast.loss_cover_scenario == 0)
+                        (data_forecast.climate_change_scenario == climate_change), #& (data_forecast.loss_cover_scenario == 0)
                         ['date','year','month','flow','Group','v_loss_cover','v_rainfall_total']]
         
         #data_forecast_mc = \
@@ -595,6 +598,8 @@ def select_macrobasin(feature:None, macrobasin_id_ini):
 def update_graph(y_value, climate_change, macrobasin_id):
     global year_current
     year_current = y_value
+
+    climate_change = scenarios[climate_change]
     #macrobasin_id = macrobasin_id_current if macrobasin_id_current != None else 1
     #if not feature is None:
     #    macrobasin_id = get_macrobasin_id(feature)
