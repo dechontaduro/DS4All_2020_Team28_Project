@@ -25,7 +25,7 @@ PREDICT_YEAR_START = 2020
 
 data_path = '../data/matrix/matrix_consol_v2.zip'
 model_rank_path = '../model/model_rank.csv'
-data_forecast_path = '../model/forecast.csv'
+data_forecast_path = '../model/forecast_2020_2021.csv'
 
 #forecast_group_column_format = 'Forecast_{Rank}_{model_type}_CC{loss_cover_scenario}'
 forecast_group_column_format = 'Forecast_{}_{}_LossCover{}'
@@ -34,7 +34,7 @@ variables_graph = [
     {'variable':'flow', 'label':'Flow', 'color': ['#B855A4'], 'axis': '1'}, 
     {'variable':'rainfall', 'label':'Precipitation',  'color': ['#4ABEEE'], 'axis': '2'}, 
     {'variable':'temperature', 'label':'Temperature', 'color': ['#FCA93A'], 'axis': '3'},
-    {'variable':'Forecast', 'color': ['#394ACA', '#33D045', '#99D045'], 'axis': '1'}, 
+    {'variable':'Forecast', 'color': ['#394ACA','#33D045','#99D045','#AAE156','#AAE156','#AAE156','#AAE156','#AAE156','#AAE156'], 'axis': '1'}, 
     ]
     
 #
@@ -450,15 +450,26 @@ def plot_data(macrobasin, variables, year, climate_change):
     if year >= PREDICT_YEAR_START:
         data_forecast_mc = \
         data_forecast.loc[(data_forecast.MC == macrobasin) & (data_forecast.Rank == 1) & 
-                        (data_forecast.climate_change_scenario == climate_change), #& (data_forecast.loss_cover_scenario == 0)
-                        ['date','year','month','flow','Group']]
-        data_forecast_mc = \
-            data_forecast_mc.pivot_table(index=['date','year','month'], columns='Group', values='flow', aggfunc='first')
+                        (data_forecast.climate_change_scenario == 'A'+str(climate_change)), #& (data_forecast.loss_cover_scenario == 0)
+                        ['date','year','month','flow','Group','v_loss_cover','v_rainfall_total']]
         
+        #data_forecast_mc = \
+        #    data_forecast_mc.pivot_table(index=['date','year','month','v_loss_cover','v_rainfall_total'], columns='Group', values='flow', aggfunc='first')
+        
+        data_forecast_mc2 = \
+            data_forecast_mc.pivot_table(index=['date','year','month'], columns='Group', values='flow', aggfunc='first')
+        data_forecast_mc2.reset_index(inplace=True)
+
+        data_forecast_mc = data_forecast_mc.merge(data_forecast_mc2, on=['date','year','month'], how = 'inner')
+        data_forecast_mc.drop(columns=['flow','Group'], inplace=True)
 
         if data_forecast_mc.shape[0] > 0:
             data_forecast_mc.reset_index(inplace=True)
             dfc = pd.concat([dfc,data_forecast_mc])
+
+
+    #print(dfc[['date','v_flow_mean','v_loss_cover','v_rainfall_total','v_temperature_mean']].tail())
+    #print(dfc.tail())
 
     has_temperature = True
     if False:#np.isnan(dfc.iloc[0,6]):
@@ -582,18 +593,22 @@ def toggle_our_team(n1, n2, is_open):
     return is_open
 
 def get_flow(macrobasin, year):
+    year = year if year < PREDICT_YEAR_START else PREDICT_YEAR_START - 1
+    
     dfc = data.loc[macrobasin].copy()
     dfc = dfc.loc[(dfc.year == year), 'v_flow_mean'].mean()
     #print(dfc)
     return dfc
 
 def get_precipitation(macrobasin, year):
+    year = year if year < PREDICT_YEAR_START else PREDICT_YEAR_START - 1
     dfc = data.loc[macrobasin].copy()
     dfc = dfc.loc[(dfc.year == year), 'v_rainfall_total'].mean()
     #print(dfc)
     return dfc
 
 def get_temperature(macrobasin, year):
+    year = year if year < PREDICT_YEAR_START else PREDICT_YEAR_START - 1
     dfc = data.loc[macrobasin].copy()
     dfc = dfc.loc[(dfc.year == year), 'v_temperature_mean'].mean()
     #print(dfc)
