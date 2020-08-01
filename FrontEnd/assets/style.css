@@ -49,6 +49,13 @@
   height: 64px;
 }
 
+.help-button{
+  position: fixed;
+  bottom: 50px;
+  left: 35px;
+  border-radius: 100%;
+}
+
 .disabled-card{
   opacity: .4;
   transition: opacity .6s;
@@ -60,6 +67,10 @@
   line-height: 1.2;
 }
 
+
+.introjs-tooltiptext {
+  font-size: 1.2rem;
+}
 
 /**************************************<ABOUT>**********************************************/
 /* FontAwesome for working BootSnippet :> */

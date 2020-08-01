@@ -215,7 +215,7 @@ y_slider_marks = {value: str(value) for value in range(2000, 2020)}
 y_slider_marks[2020] = {"label": "*2020", 'style': {'color': '#f00', 'font-weight': 'bold'}}
 y_slider_marks[2021] = {"label": "*2021", 'style': {'color': '#f00', 'font-weight': 'bold'}}
 
-kwargs = {"data-step":"2", "data-intro":"Here you can explore each year of data", "data-position":'right', "data-scrollTo":'tooltip'}
+kwargs = {"data-step":"2", "data-intro":"Here you can explore each year of data, and for 2020, 2021 get the Flow prediction", "data-position":'right', "data-scrollTo":'tooltip'}
 year_slider = html.Div([
     dcc.Slider(
         min=2000,
@@ -244,7 +244,7 @@ year_slider = html.Div([
 ##########################################################
 ######################### + INFO #########################
 ##########################################################
-kwargs = {"data-step":"5", "data-intro":"Here you can find more information about the Basin", "data-position":'right', "data-scrollTo":'tooltip'}
+kwargs = {"data-step":"5", "data-intro":"Here you can find more information about the selected Basin", "data-position":'right', "data-scrollTo":'tooltip'}
 more_info = html.Div(
     [
         dbc.Button(html.I(className="fa fa-info-circle", style={"font-size": "32px"}, **kwargs), 
@@ -278,6 +278,7 @@ more_info = html.Div(
 ##########################################################
 ########################## ABOUT #########################
 ##########################################################
+kwargs = {"data-step":"6", "data-intro":"Do U want to know our Awesome Team? Here we are", "data-position":'right', "data-scrollTo":'tooltip'}
 about_div = html.Div(
     [
         dbc.Button([html.I(className="fa fa-users", style={"font-size": "16px", "margin-right": "5px"}), "   OUR TEAM"],
@@ -292,15 +293,16 @@ about_div = html.Div(
                             dbc.Row(
                                 [ # dbc.Col(html.Img(src=f"assets/img/col-gov-logo.png", width="200px")),
                                     about.create_team_mate_card('Diana Camila', 'diana.jpg', 'Statistician, PhD in Biomedicine. Specialized in bioinformatics and high-throughput sequencing analysis. Skilled in machine learning and data mining. Experience working in research projects with multidisciplinary teams. I\'m passionate about traveling, nature and music.'), 
-                                    about.create_team_mate_card('Jesus Alfonso', 'jesus.jpg', 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat'), 
-                                    about.create_team_mate_card('Jhon William', 'jhon.jpg', 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat'), 
+                                    about.create_team_mate_card('Jesus Alfonso', 'jesus.jpg', 'Civil Engineer Javeriana University / Specialist in Hydraulic Engineering IHE - Delft, Netherlands'), 
+                                    about.create_team_mate_card('Jhon William', 'jhon.jpg', 'Electrical Engineer (Universidad Nacional de Colombia) / Specialist in Networks and Telecommunications (Universidad de Manizales) / Specialist in Energy and Gas Regulation (Universidad Esxternado de Colombia) / Specialist in Statistics (Universidad Nacional de Colombia) \
+                                                                 / Oracle Certified Associate (Oracle) / .Net Development Certificate (Microsoft), Hobbies: Reading, learning office tools, Karate Do'), 
                                 ],
                             ),
                             dbc.Row(
                                 [ # dbc.Col(html.Img(src=f"assets/img/col-gov-logo.png", width="200px")),
-                                    about.create_team_mate_card('Diego', 'diego.jpg', 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat'), 
-                                    about.create_team_mate_card('Juan Carlos', 'juan.jpg', 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat'), 
-                                    about.create_team_mate_card('William', 'william.jpg', 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat'), 
+                                    about.create_team_mate_card('Diego', 'diego.jpg', 'Ingeniero de Petróleos Universidad America. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat'), 
+                                    about.create_team_mate_card('Juan Carlos', 'juan.jpg', 'Electronic Engineer National University of Colombia, Master in Management and Development of Software Projects Autonomous University of Manizales. Certificate in Development. Net. Microsoft.'), 
+                                    about.create_team_mate_card('William', 'william.jpg', 'Electronic Engineer National University of Colombia, Master in Industrial Automation. Passionate about art, music and learning new things.'), 
                                 ],
                             )
                         ], 
@@ -314,10 +316,25 @@ about_div = html.Div(
             size="xl", #"lg" lg -> large,  xl -> extra-large
             #scrollable=True, #comment if you want 
         ),   
-    ]
+    ],
+    **kwargs
 )
 
 
+################################################################################
+############################## help button #####################################
+################################################################################
+
+help_div = html.Div(
+    [
+        dbc.Button(
+            html.I(className="fa fa-question-circle", style={"font-size": "16px"}), 
+            id="help-button", 
+            className="btn pmd-btn-fab pmd-ripple-effect btn-success pmd-btn-raised help-button",
+            color="success",
+        ),
+    ]
+)
 
 
 
@@ -589,7 +606,7 @@ def update_graph(y_value, climate_change, macrobasin_id):
     precip = round(precip, 1) if precip else '-'
     temperature = get_temperature(macrobasin_id, y_value)
     temperature = round(temperature, 1) if not np.isnan(temperature) else '-'
-    macrobasin_title = f"Macrobasin {macrobasin_id}"
+    macrobasin_title = f"Macrobasin {macrobasin_id} >> Year {y_value}"
 
     return (plot_data(macrobasin_id, variables_graph, y_value, climate_change), [f"{loss_cover}", html.Small("%")], [f"{flow}"[:5], html.Small(["m",html.Sup("3"), "/s"])],
             [f"{precip}", html.Small("mm")], [f"{temperature}", html.Small("°"), "C"], macrobasin_title)
@@ -638,6 +655,17 @@ def get_temperature(macrobasin, year):
     #print(dfc)
     return dfc
 
+app.clientside_callback(
+    """
+    function(help) {
+        introJs().start();
+        return "success";
+    }
+    """,
+    Output("help-button", 'color'),
+    [Input("help-button", "n_clicks")
+     ]
+)
 
 
 
@@ -649,6 +677,7 @@ def on_switch(value, cover_loss_class, temperature_class):
 
 
 kwargs = {"data-step":"3", "data-intro":"You Can Select any macro basin you are interested", "data-position":'right', "data-scrollTo":'tooltip'}
+kwargs1 = {"data-step":"4", "data-intro":"You Can Visualize the values of flow, precipitation and temperature, of the selected Basin in a selected year", "data-position":'right', "data-scrollTo":'tooltip'}
 main_card = html.Div(
         dbc.Card([
             dbc.Row([ #switch and timeline
@@ -683,7 +712,10 @@ main_card = html.Div(
                 dbc.Col([#graphs
                     dbc.Row([
                             dbc.Col(
-                                dcc.Graph(id="graph"),
+                                html.Div(
+                                    dcc.Graph(id="graph"),
+                                    **kwargs1
+                                )
                                 #style={"margin-left":" 10px"}
                             ),
                             ],no_gutters=True,
@@ -706,10 +738,11 @@ app.layout = dbc.Container(
         header,
         cards,
         main_card,
-        more_info
+        more_info,
+        help_div,
     ]),
     fluid=True,
 )
 
 if __name__ in ["__main__"]:
-    app.run_server(debug=False)
+    app.run_server(debug=True)
