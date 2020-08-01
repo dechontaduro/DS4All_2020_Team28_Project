@@ -27,7 +27,7 @@ data_forecast_path = '../model/forecast.csv'
 
 variables_graph = [
     {'variable':'flow', 'label':'Flow', 'color': ['#B855A4'], 'axis': '1'}, 
-    {'variable':'rainfall', 'label':'Rain Fall',  'color': ['#4ABEEE'], 'axis': '2'}, 
+    {'variable':'rainfall', 'label':'Precipitation',  'color': ['#4ABEEE'], 'axis': '2'}, 
     {'variable':'temperature', 'label':'Temperature', 'color': ['#FCA93A'], 'axis': '3'},
     {'variable':'fc', 'color': ['#394ACA', '#33D045', '#99D045'], 'axis': '1'}, 
     ]
@@ -83,25 +83,30 @@ scn_slider = html.Div([
             step=None,
             marks=scenarios,
             value=2,
-        )
+            id = "scenarios-slider",
+        ),
+        dbc.Tooltip(
+            "slide to choose between different climate change scenarios",
+            target="scenarios-slider",
+        ),
     ], 
     style= {'display': 'none'},
     id = "scenarios"
 )
 #Cover Loss Slider
-cover_loss_marks = {x: f'{x}%' for x in [0, 25, 50, 100]}
-cover_loss_slider = html.Div([
-        dcc.Slider(
-            min=0,
-            max=100,
-            marks=cover_loss_marks,
-            value=30,
-            id = "cover-loss-scenario-value"
-        )
-    ], 
-    style= {'display': 'none'},
-    id = "cover-loss-scenario"
-)
+# cover_loss_marks = {x: f'{x}%' for x in [0, 25, 50, 100]}
+# cover_loss_slider = html.Div([
+#         dcc.Slider(
+#             min=0,
+#             max=100,
+#             marks=cover_loss_marks,
+#             value=30,
+#             id = "cover-loss-scenario-value"
+#         )
+#     ], 
+#     style= {'display': 'none'},
+#     id = "cover-loss-scenario"
+# )
 
 cards = html.Div([
         dbc.Row([
@@ -110,10 +115,13 @@ cards = html.Div([
                         html.Img(src="assets/img/cover_loss.png",  className="card-img"),
                         html.Div([
                             html.H5("Cover Loss", className="card-title"), 
-                            html.H1(["30", html.Small("%")], className="display-4", id= 'cover-loss-value')
+                            html.H1(["30", html.Small("%")], className="display-5", id= 'cover-loss-value')
                         ], className = "card-img-overlay card_ds4a"),
-                        ], className = "text-right"),
-                    cover_loss_slider,
+                        ], 
+                        className = "text-right",
+                        id="cover-loss-card"
+                    ),
+                    # cover_loss_slider,
                 ],
                 md = 3
             ),
@@ -122,9 +130,12 @@ cards = html.Div([
                     html.Img(src="assets/img/flow.png",  className="card-img"),
                     html.Div([
                         html.H5("Flow", className="card-title"), 
-                        html.H1(["17", html.Small("mm")], className="display-4", id = 'flow-value')
+                        html.H1(["17", html.Small(["m",html.Sup("3"), "/s"])], className="display-5", id = 'flow-value')
                     ], className = "card-img-overlay card_ds4a"),
-                    ], className = "text-left"),
+                    ], 
+                    className = "text-left",
+                    id = "flow-card"
+                ),
                 md = 3
             ),
             dbc.Col([
@@ -132,9 +143,12 @@ cards = html.Div([
                         html.Img(src="assets/img/precipitation.png",  className="card-img"),
                         html.Div([
                             html.H5("Precipitation", className="card-title"), 
-                            html.H1(["25", html.Small("mm")], className="display-4")
+                            html.H1(["25", html.Small("mm")], className="display-5", id= 'precipitation-value')
                         ], className = "card-img-overlay card_ds4a"),
-                        ], className = "text-left"),
+                        ], 
+                        className = "text-left",
+                        id = "precititation-card"
+                    ),
                     scn_slider,
                 ],
                 md = 3
@@ -145,9 +159,11 @@ cards = html.Div([
                         html.Img(src="assets/img/temperature.png",  className="card-img"),
                         html.Div([
                             html.H5("Temperature", className="card-title"), 
-                            html.H1(["28", html.Small("°"), "C"], className="display-4")
+                            html.H1(["28", html.Small("°"), "C"], className="display-5", id= 'temperature-value')
                         ], className = "card-img-overlay card_ds4a"),
-                        ], className = "text-right"
+                        ], 
+                        className = "text-right",
+                        id = "temperature-card"
                     ),
                 ],
                 md = 3
@@ -431,10 +447,11 @@ def plot_data(macrobasin, variables, year):
                      ['date','year','month','flow','Rank_model']]
     data_forecast_mc = \
         data_forecast_mc.pivot_table(index=['date','year','month'], columns='Rank_model', values='flow', aggfunc='first')
-    data_forecast_mc.reset_index(inplace=True)
+    
     
 
     if data_forecast_mc.shape[0] > 0:
+        data_forecast_mc.reset_index(inplace=True)
         dfc = pd.concat([dfc,data_forecast_mc])
 
     has_temperature = True
@@ -518,13 +535,23 @@ def plot_data(macrobasin, variables, year):
     return _fig
 
 
-@app.callback(Output('graph', 'figure'), 
+@app.callback([Output('graph', 'figure'), Output('cover-loss-value', 'children'), Output('flow-value', 'children'), Output('precipitation-value', 'children'), Output('temperature-value', 'children')],
     [Input('year-slider', 'value'), Input("basins_map", "featureClick")])
 def update_graph(y_value, feature=None):
     macrobasin_id = 1
     if not feature is None:
         macrobasin_id = get_macrobasin_id(feature)
-    return plot_data(macrobasin_id, variables_graph, y_value)
+    loss_cover = get_loss_cover(macrobasin_id, y_value)
+    loss_cover = round(loss_cover*100, 1) if loss_cover else '-'
+    flow = get_flow(macrobasin_id, y_value)
+    flow = round(flow, 1) if flow else '-'
+    precip = get_precipitation(macrobasin_id, y_value)
+    precip = round(precip, 1) if precip else '-'
+    temperature = get_temperature(macrobasin_id, y_value)
+    temperature = round(temperature, 1) if not np.isnan(temperature) else '-'
+
+    return (plot_data(macrobasin_id, variables_graph, y_value), [f"{loss_cover}", html.Small("%")], [f"{flow}"[:5], html.Small(["m",html.Sup("3"), "/s"])],
+            [f"{precip}", html.Small("mm")], [f"{temperature}", html.Small("°"), "C"])
 
 
 
@@ -543,24 +570,37 @@ def toggle_more_info(n1, n2, is_open):
     Output("our-team-modal", "is_open"),
     [Input("open-our-team", "n_clicks"), Input("close-our-team", "n_clicks")],
     [State("our-team-modal", "is_open")])
-def toggle_more_info(n1, n2, is_open):
+def toggle_our_team(n1, n2, is_open):
     if n1 or n2:
         return not is_open
     return is_open
+
+def get_flow(macrobasin, year):
+    dfc = data.loc[macrobasin].copy()
+    dfc = dfc.loc[(dfc.year == year), 'v_flow_mean'].mean()
+    #print(dfc)
+    return dfc
+
+def get_precipitation(macrobasin, year):
+    dfc = data.loc[macrobasin].copy()
+    dfc = dfc.loc[(dfc.year == year), 'v_rainfall_total'].mean()
+    #print(dfc)
+    return dfc
+
+def get_temperature(macrobasin, year):
+    dfc = data.loc[macrobasin].copy()
+    dfc = dfc.loc[(dfc.year == year), 'v_temperature_mean'].mean()
+    #print(dfc)
+    return dfc
 
 
 
 
 #TODO: Capturar el cambio y filtrar la data, las gráficas estén supervisando esta data para que se propague
 
-#@app.callback([Output('scenarios', 'style'), Output('cover-loss-scenario', 'style')],[Input("predictive-descriptive-switch", 'value')])
-def on_switch(value):
-    return {"display": "block" if value else "none"}, {"display": "block" if value else "none"}
-
-
-@app.callback(Output('cover-loss-value', 'children'),[Input("cover-loss-scenario-value", 'value')])
-def on_cover_loss_slider(value):
-    return [f"{value}", html.Small("%")]
+@app.callback([Output('scenarios', 'style'), Output("cover-loss-card", "className"), Output("temperature-card", "className")],[Input('year-slider', 'value')], [State("cover-loss-card", "className"), State("temperature-card", "className")])
+def on_switch(value, cover_loss_class, temperature_class):
+    return {"display": "block" if value > 2019 else "none"}, f"{cover_loss_class} disabled-card" if value > 2019 else cover_loss_class.split()[0], f"{temperature_class} disabled-card" if value > 2019 else temperature_class.split()[0]
 
 
 
@@ -624,4 +664,4 @@ app.layout = dbc.Container(
 )
 
 if __name__ in ["__main__"]:
-    app.run_server(debug=False)
+    app.run_server(debug=True)

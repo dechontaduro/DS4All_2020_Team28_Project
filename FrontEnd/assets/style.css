@@ -49,6 +49,17 @@
   height: 64px;
 }
 
+.disabled-card{
+  opacity: .4;
+  transition: opacity .6s;
+}
+
+.display-5 {
+  font-size: 3.0rem;
+  font-weight: 300;
+  line-height: 1.2;
+}
+
 
 /**************************************<ABOUT>**********************************************/
 /* FontAwesome for working BootSnippet :> */
