@@ -1,5 +1,5 @@
 .container_ds4a {
-  height: 100px;
+  height: 110px;
   position: relative;
 }
 .vertical-center {
@@ -42,7 +42,7 @@
 
 .more-info{
   position: fixed;
-  bottom: 100px;
+  bottom: 50px;
   right: 35px;
   border-radius: 100%;
   width: 64px;
