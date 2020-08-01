@@ -116,33 +116,41 @@ scn_slider = html.Div([
 cards = html.Div([
         dbc.Row([
             dbc.Col([
-                    dbc.Card([
-                        html.Img(src="assets/img/cover_loss.png",  className="card-img"),
-                        html.Div([
-                            html.H5("Cover Loss", className="card-title"), 
-                            html.H1(["30", html.Small("%")], className="display-5", id= 'cover-loss-value')
-                        ], className = "card-img-overlay card_ds4a"),
-                        ], 
-                        className = "text-right",
-                        id="cover-loss-card"
+                dbc.Row([
+                    dbc.Col([
+                            dbc.Card([
+                                html.Img(src="assets/img/cover_loss.png",  className="card-img"),
+                                html.Div([
+                                    html.H5("Cover Loss", className="card-title"), 
+                                    html.H1(["30", html.Small("%")], className="display-5", id= 'cover-loss-value')
+                                ], className = "card-img-overlay card_ds4a"),
+                                ], 
+                                className = "text-right",
+                                id="cover-loss-card"
+                            ),
+                            # cover_loss_slider,
+                        ],
+                        md = 6
                     ),
-                    # cover_loss_slider,
-                ],
-                md = 3
-            ),
-            dbc.Col(
-                dbc.Card([
-                    html.Img(src="assets/img/flow.png",  className="card-img"),
-                    html.Div([
-                        html.H5("Flow", className="card-title"), 
-                        html.H1(["17", html.Small(["m",html.Sup("3"), "/s"])], className="display-5", id = 'flow-value')
-                    ], className = "card-img-overlay card_ds4a"),
-                    ], 
-                    className = "text-left",
-                    id = "flow-card"
-                ),
-                md = 3
-            ),
+                    dbc.Col(
+                        dbc.Card([
+                            html.Img(src="assets/img/flow.png",  className="card-img"),
+                            html.Div([
+                                html.H5("Flow", className="card-title"), 
+                                html.H1(["17", html.Small(["m",html.Sup("3"), "/s"])], className="display-5", id = 'flow-value')
+                            ], className = "card-img-overlay card_ds4a"),
+                            ], 
+                            className = "text-left",
+                            id = "flow-card"
+                        ),
+                        md = 6
+                    ),
+                ]),
+                html.Div([
+                    html.H3("Select a Macrobasin in the map", style={"color":"purple"}, id="macrobasin-title"), 
+                ])
+            ], 
+            md=6),
             dbc.Col([
                     dbc.Card([
                         html.Img(src="assets/img/precipitation.png",  className="card-img"),
@@ -275,7 +283,7 @@ about_div = html.Div(
         ),
         dbc.Modal(#put here the content
             [
-                dbc.ModalHeader("OUR TEAM"),
+                dbc.ModalHeader("TEAM 28"),
                 dbc.ModalBody(
                     html.Div(
                         [
@@ -551,7 +559,9 @@ def plot_data(macrobasin, variables, year, climate_change):
     return _fig
 
 
-@app.callback([Output('graph', 'figure'), Output('cover-loss-value', 'children'), Output('flow-value', 'children'), Output('precipitation-value', 'children'), Output('temperature-value', 'children')],
+@app.callback([Output('graph', 'figure'), Output('cover-loss-value', 'children'), Output('flow-value', 'children'), 
+               Output('precipitation-value', 'children'), Output('temperature-value', 'children'), 
+               Output('macrobasin-title', 'children')],
     [Input('year-slider', 'value'), Input('scenarios-slider', 'value'), Input("basins_map", "featureClick")])
 def update_graph(y_value, climate_change, feature=None):
     global macrobasin_id_current
@@ -566,9 +576,10 @@ def update_graph(y_value, climate_change, feature=None):
     precip = round(precip, 1) if precip else '-'
     temperature = get_temperature(macrobasin_id, y_value)
     temperature = round(temperature, 1) if not np.isnan(temperature) else '-'
+    macrobasin_title = f"Macrobasin {macrobasin_id}"
 
     return (plot_data(macrobasin_id, variables_graph, y_value, climate_change), [f"{loss_cover}", html.Small("%")], [f"{flow}"[:5], html.Small(["m",html.Sup("3"), "/s"])],
-            [f"{precip}", html.Small("mm")], [f"{temperature}", html.Small("°"), "C"])
+            [f"{precip}", html.Small("mm")], [f"{temperature}", html.Small("°"), "C"], macrobasin_title)
 
 
 
