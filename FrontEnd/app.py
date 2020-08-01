@@ -429,7 +429,7 @@ def update_map(map_path, year):
     global year_current
     global macrobasin_id_current
     year_current = year
-    macrobasin_id_current = None#get_macrobasin_id(feature)
+    #macrobasin_id_current = None#get_macrobasin_id(feature)
 
     with open(map_path) as f:
         _ = json.load(f)
@@ -543,7 +543,8 @@ def plot_data(macrobasin, variables, year, climate_change):
 @app.callback([Output('graph', 'figure'), Output('cover-loss-value', 'children'), Output('flow-value', 'children'), Output('precipitation-value', 'children'), Output('temperature-value', 'children')],
     [Input('year-slider', 'value'), Input('scenarios-slider', 'value'), Input("basins_map", "featureClick")])
 def update_graph(y_value, climate_change, feature=None):
-    macrobasin_id = 1
+    global macrobasin_id_current
+    macrobasin_id = macrobasin_id_current if macrobasin_id_current != None else 1
     if not feature is None:
         macrobasin_id = get_macrobasin_id(feature)
     loss_cover = get_loss_cover(macrobasin_id, y_value)
