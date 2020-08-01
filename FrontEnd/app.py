@@ -328,6 +328,9 @@ data.set_index(['mc'], inplace = True)
 model_rank = pd.read_csv(model_rank_path)
 
 data_forecast = pd.read_csv(data_forecast_path,  parse_dates = ['date'])
+data_forecast.rename(columns={'mc':'MC','v_flow_mean_pred':'flow','v_loss_cover_assum':'v_loss_cover',
+                        'v_rainfall_total_assum':'v_rainfall_total'}, inplace=True)
+
 data_forecast = data_forecast.merge(model_rank, left_on=['MC','model_type'], right_on=['MC','Model'], how = 'inner')
 #data_forecast['Group'] = forecast_group_column_format.format('Rank': data_forecast['Rank'], 'model_type': data_forecast['model_type'], 'loss_cover_scenario': data_forecast['loss_cover_scenario'])
 data_forecast['Group'] = data_forecast.apply(lambda x: forecast_group_column_format.format(x['Rank'], x['model_type'], x['loss_cover_scenario']), axis=1)
