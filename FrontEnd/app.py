@@ -485,19 +485,17 @@ def plot_data(macrobasin, variables, year, climate_change):
                         (data_forecast.climate_change_scenario == climate_change), #& (data_forecast.loss_cover_scenario == 0)
                         ['date','year','month','flow','Group','v_loss_cover','v_rainfall_total']]
         
-        #data_forecast_mc = \
-        #    data_forecast_mc.pivot_table(index=['date','year','month','v_loss_cover','v_rainfall_total'], columns='Group', values='flow', aggfunc='first')
-        
-        data_forecast_mc2 = \
-            data_forecast_mc.pivot_table(index=['date','year','month'], columns='Group', values='flow', aggfunc='first')
-        data_forecast_mc2.reset_index(inplace=True)
+        if data_forecast_mc.shape[0] > 0:    
+            data_forecast_mc2 = \
+                data_forecast_mc.pivot_table(index=['date','year','month'], columns='Group', values='flow', aggfunc='first')
+            data_forecast_mc2.reset_index(inplace=True)
 
-        data_forecast_mc = data_forecast_mc.merge(data_forecast_mc2, on=['date','year','month'], how = 'inner')
-        data_forecast_mc.drop(columns=['flow','Group'], inplace=True)
+            data_forecast_mc = data_forecast_mc.merge(data_forecast_mc2, on=['date','year','month'], how = 'inner')
+            data_forecast_mc.drop(columns=['flow','Group'], inplace=True)
 
-        if data_forecast_mc.shape[0] > 0:
             data_forecast_mc.reset_index(inplace=True)
             dfc = pd.concat([dfc,data_forecast_mc])
+
 
 
     #print(dfc[['date','v_flow_mean','v_loss_cover','v_rainfall_total','v_temperature_mean']].tail())
