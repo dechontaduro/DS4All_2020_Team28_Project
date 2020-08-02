@@ -350,8 +350,8 @@ data_forecast.rename(columns={'mc':'MC','v_flow_mean_pred':'flow','v_loss_cover_
                         'v_rainfall_total_assum':'v_rainfall_total'}, inplace=True)
 
 data_forecast = data_forecast.merge(model_rank, left_on=['MC','model_type'], right_on=['MC','Model'], how = 'inner')
-data_forecast.loc[data_forecast.Model.isna(), ['Rank']] = 1
-data_forecast.loc[data_forecast.Model.isna(), ['Model']] = data_forecast[data_forecast.Model.isna()]['model_type']
+#data_forecast.loc[data_forecast.Model.isna(), ['Rank']] = 1
+#data_forecast.loc[data_forecast.Model.isna(), ['Model']] = data_forecast[data_forecast.Model.isna()]['model_type']
 
 #data_forecast['Group'] = forecast_group_column_format.format('Rank': data_forecast['Rank'], 'model_type': data_forecast['model_type'], 'loss_cover_scenario': data_forecast['loss_cover_scenario'])
 data_forecast['Group'] = data_forecast.apply(lambda x: forecast_group_column_format.format(x['Rank'], x['model_type'], x['loss_cover_scenario']), axis=1)
@@ -481,8 +481,9 @@ def plot_data(macrobasin, variables, year, climate_change):
 
     if year >= PREDICT_YEAR_START:
         data_forecast_mc = \
-        data_forecast.loc[(data_forecast.MC == macrobasin) & (data_forecast.Rank == 1) & 
-                        (data_forecast.climate_change_scenario == climate_change), #& (data_forecast.loss_cover_scenario == 0)
+        data_forecast.loc[(data_forecast.MC == macrobasin) 
+                            & (data_forecast.climate_change_scenario == climate_change) 
+                            & ((data_forecast.Rank == 1) | (data_forecast.loss_cover_scenario == '100%')), 
                         ['date','year','month','flow','Group','v_loss_cover','v_rainfall_total']]
         
         if data_forecast_mc.shape[0] > 0:    
