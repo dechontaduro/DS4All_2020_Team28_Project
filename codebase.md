@@ -3,7 +3,7 @@
 # App
 + **app.py**: frontend.
 
-Utiliza los siguientes datasets:
+Use the following datasets:
 1. **\data\matrix\matrix_consol_v2.zip**: monthly consolidated records of the variables to make the forecast and exploratory graphs.
 2. **\model\forecast.csv**: monthly predictions of the flow variable for the different models.
 3. **\model\model_rank.csv**: ranking of the models by macro basin according to the level of accuracy.
