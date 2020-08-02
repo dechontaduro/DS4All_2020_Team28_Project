@@ -244,6 +244,21 @@ year_slider = html.Div([
 ##########################################################
 ######################### + INFO #########################
 ##########################################################
+
+dff= pd.read_csv('../data/variables/basin_info.csv')
+dff.set_index(['Macrocuenca'], inplace = True)
+dff.drop(columns= ['Unnamed: 0'], inplace= True)
+DATA = dff.to_dict('records')
+
+rainfall_graph= pd.read_csv('../data/variables/rainfall_graph_info.csv')
+rainfall_graph.set_index(['CANT'], inplace=True)
+df_rainfall = rainfall_graph.to_dict('records')
+
+flow_graph= pd.read_csv('../data/variables/flow_graph_info.csv')
+flow_graph.set_index(['cuenca'], inplace=True)
+flow_graph.drop(columns= ['Unnamed: 0'], inplace= True)
+df_flow = flow_graph.to_dict('records')
+
 kwargs = {"data-step":"5", "data-intro":"Here you can find more information about the selected Basin", "data-position":'right', "data-scrollTo":'tooltip'}
 more_info = html.Div(
     [
@@ -252,16 +267,91 @@ more_info = html.Div(
         ),
         dbc.Modal(#put here the content
             [
-                dbc.ModalHeader("Title of more info Section"),
+                dbc.ModalHeader("More info of selected basin"),
                 dbc.ModalBody(
                     html.Div(
                         [
                             dbc.Row(
                                 [ 
+                                    dbc.Col(),
+                                    dbc.Col(),
                                     dbc.Col(html.Img(src=f"assets/img/col-gov-logo.png", width="200px")),
                                 ],
-                            )
+                            ),
+                            dbc.Row(
+                                [
+                                    dbc.Col([
+                                        html.H4(children= 'basin',
+                                        id= 'more_info_title'
+                                                ),
+                                        dt.DataTable(
+                                            id='table',
+                                            columns=[{"name": i, "id": i} for i in dff.columns],
+                                            data=DATA,
+                                            style_table={'height': '110px', 'overflowX': 'auto', 'textAlign': 'left'},
+                                            fixed_rows={'headers': True},
+                                            style_cell={'minWidth': 95, 'width': 95, 'maxWidth': 95},
+                                            style_header={
+                                                'backgroundColor': 'darkgray',
+                                                'fontWeight': 'bold', 
+                                                'whiteSpace': 'normal'
+                                            },
+                                        ),
+                                     ],),
                         ], 
+                    ),
+                    dbc.Row(),
+                                dbc.Row(
+                                    [
+                                        dbc.Col(
+                                                dcc.Graph(style={'height': '300px'},id="flowbox-graph"),
+                ),
+                dbc.Col([
+                                            html.H4(children= 'information of the flow station of the basin'),
+                                            dt.DataTable( id='table_2',
+                                            columns=[{"name": i, "id": i} for i in flow_graph.columns],
+                                            data=df_flow,
+                                            style_table={'height': '300px', 'overflowX': 'auto', 'textAlign': 'left'},
+                                            fixed_rows={'headers': True},
+                                            style_cell={'minWidth': 95, 'width': 95, 'maxWidth': 95, 'fontSize':9, 'font-family':'sans-serif'},
+                                            style_header={
+                                                'backgroundColor': 'withe',
+                                                'fontWeight': 'bold', 
+                                                'whiteSpace': 'normal'
+                                                    },
+                                                ),
+                                            ],
+                                            width=4,
+                                            md=30,
+                                        ),
+                                    ],
+                                ),
+                                dbc.Row(),
+                                dbc.Row(
+                                [
+                                    dbc.Col(dcc.Graph(style={'height': '300px'},id="pptbox-graph"),),
+                                    dbc.Col(
+                                        [
+                                            html.H4(children= 'information of the precipitation stations of the basin'),
+                                            dt.DataTable( id='table_1',
+                                            columns=[{"name": i, "id": i} for i in rainfall_graph.columns],
+                                            data=df_rainfall,
+                                            style_table={'height': '300px', 'overflowX': 'auto', 'textAlign': 'left'},
+                                            fixed_rows={'headers': True},
+                                            style_cell={'minWidth': 95, 'width': 95, 'maxWidth': 95, 'fontSize':9, 'font-family':'sans-serif'},
+                                            style_header={
+                                                'backgroundColor': 'withe',
+                                                'fontWeight': 'bold', 
+                                                'whiteSpace': 'normal'
+                                                },
+                                            ),
+                                        ],
+                                        width=4,
+                                        md=30,
+                                    ),
+                                ],
+                            ),        
+                        ],  
                     ),
                 ),
                 dbc.ModalFooter(
@@ -670,6 +760,91 @@ app.clientside_callback(
     [Input("help-button", "n_clicks")
      ]
 )
+
+def plot_data2(macrobasin, variables, year, month=12):
+    dfc = data.copy()
+    di = {1: "JAN", 2: "FEB", 3: "MAR", 4: "APR", 5: "MAY", 6: "JUN", 7: "JUL", 8: "AUG", 9: "SEP", 10: "OCT", 11: "NOV", 12: "DEC"}
+    dfc=dfc.replace({"month": di})
+    dfc=dfc.loc[macrobasin]
+    dfc.rename({"v_rainfall_total":"rainfall total mm", "v_flow_mean":"flow mean m3/s"}, axis='columns', inplace= True)
+    print('+'*30, macrobasin, variables, year, month,'+'*30)
+    var = variables[0]
+    _fig = px.box(dfc, x='month', y=var,width=800, height=400, title=f' multi-year monthly {var[:4]}')
+    _fig.update_layout(
+    title={
+        'y':0.8,
+        'x':0.5,
+        'xanchor': 'center',
+        'yanchor': 'top'},
+    font_family="Oswald",
+    font_color="blue",
+    title_font_family="sans-serif",
+    title_font_color="red") 
+    #_figs.append(_fig)
+    return _fig
+                                    
+@app.callback(Output('flowbox-graph', 'figure'),
+    [Input('year-slider', 'value'), Input("basins_map", "featureClick")])
+def update_flowbox_graph(y_value, feature=None):
+    macrobasin_id = 1
+    if not feature is None:
+        macrobasin_id = get_macrobasin_id(feature)
+    return plot_data2(macrobasin_id, ['flow mean m3/s'], y_value)
+
+@app.callback(Output('pptbox-graph', 'figure'),
+    [Input('year-slider', 'value'), Input("basins_map", "featureClick")])
+def update_flowbox_graph(y_value, feature=None):
+    macrobasin_id = 1
+    if not feature is None:
+        macrobasin_id = get_macrobasin_id(feature)
+    return plot_data2(macrobasin_id, ['rainfall total mm'], y_value)
+
+@app.callback(
+    Output('table', 'data'),
+    [ Input("basins_map", "featureClick")])
+def update_table(feature=None):
+    macrobasin_id = 1
+    dft= dff.copy()
+    if not feature is None:
+        macrobasin_id = get_macrobasin_id(feature)
+        dft= dft.loc[macrobasin_id,::].to_frame().transpose()
+    return dft.to_dict('records')
+
+@app.callback(
+    Output('table_1', 'data'),
+    [ Input("basins_map", "featureClick")])
+def update_table_1(feature=None):
+    macrobasin_id = 1
+    dft= rainfall_graph.copy()
+    l=[12, 2, 45, 4, 5, 6, 7, 8, 9, 11, 25, 26, 32, 31, 29, 18, 28, 27, 21, 22, 23, 33]
+    if not feature is None:
+        macrobasin_id = get_macrobasin_id(feature)
+        if macrobasin_id in l:
+            dft= dft.loc[macrobasin_id].to_frame().transpose()
+        else:
+            dft= dft.loc[macrobasin_id]
+    return dft.to_dict('records')
+
+@app.callback(
+    Output('table_2', 'data'),
+    [ Input("basins_map", "featureClick")])
+def update_table_2(feature=None):
+    macrobasin_id = 1
+    dft= flow_graph.copy()
+    if not feature is None:
+        macrobasin_id = get_macrobasin_id(feature)
+        dft= dft.loc[macrobasin_id].to_frame().transpose()
+    return dft.to_dict('records')
+
+
+@app.callback(
+    Output('more_info_title', 'children'),
+    [ Input("basins_map", "featureClick")])
+def update_more_info_title(feature=None):
+    macrobasin_id = 1
+    if not feature is None:
+        macrobasin_id = get_macrobasin_id(feature)
+    return "Basin {}".format(str(macrobasin_id))
 
 
 
