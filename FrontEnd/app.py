@@ -90,12 +90,12 @@ scn_slider = html.Div([
             value=1,
             id = "scenarios-slider",
         ),
-        dbc.Tooltip(
-            "slide to choose between different climate change scenarios",
-            target="scenarios-slider",
-        ),
+        #dbc.Tooltip(
+        #    "slide to choose between different climate change scenarios",
+        #    target="scenarios-slider",
+        #),
     ], 
-    style= {'display': 'none'},
+    #style= {'display': 'none'},
     id = "scenarios"
 )
 #Cover Loss Slider
@@ -267,17 +267,10 @@ more_info = html.Div(
         ),
         dbc.Modal(#put here the content
             [
-                dbc.ModalHeader("More info of selected basin"),
+                dbc.ModalHeader("More Information of The Selected Basin"),
                 dbc.ModalBody(
                     html.Div(
                         [
-                            dbc.Row(
-                                [ 
-                                    dbc.Col(),
-                                    dbc.Col(),
-                                    dbc.Col(html.Img(src=f"assets/img/col-gov-logo.png", width="200px")),
-                                ],
-                            ),
                             dbc.Row(
                                 [
                                     dbc.Col([
@@ -298,15 +291,15 @@ more_info = html.Div(
                                             },
                                         ),
                                      ],),
-                        ], 
-                    ),
-                    dbc.Row(),
-                                dbc.Row(
-                                    [
-                                        dbc.Col(
-                                                dcc.Graph(style={'height': '300px'},id="flowbox-graph"),
-                ),
-                dbc.Col([
+                                ], 
+                            ),
+                            dbc.Row(
+                                [
+                                    dbc.Col(
+                                            dcc.Graph(style={'height': '300px',},id="flowbox-graph", config = {'displayModeBar':False,}),
+                                            md=5,
+                                    ),
+                                    dbc.Col([
                                             html.H4(children= 'information of the flow station of the basin'),
                                             dt.DataTable( id='table_2',
                                             columns=[{"name": i, "id": i} for i in flow_graph.columns],
@@ -321,15 +314,17 @@ more_info = html.Div(
                                                     },
                                                 ),
                                             ],
-                                            width=4,
-                                            md=30,
+                                            md=7,
                                         ),
-                                    ],
-                                ),
-                                dbc.Row(),
-                                dbc.Row(
+                                ],
+                                style={'margin-top': '20px'},
+                            ),
+                            dbc.Row(
                                 [
-                                    dbc.Col(dcc.Graph(style={'height': '300px'},id="pptbox-graph"),),
+                                    dbc.Col(
+                                        dcc.Graph(style={'height': '300px'},id="pptbox-graph", config = {'displayModeBar':False,}),
+                                        md=5,
+                                    ),
                                     dbc.Col(
                                         [
                                             html.H4(children= 'information of the precipitation stations of the basin'),
@@ -346,12 +341,12 @@ more_info = html.Div(
                                                 },
                                             ),
                                         ],
-                                        width=4,
-                                        md=30,
+                                        md=7,
                                     ),
                                 ],
-                            ),        
-                        ],  
+                                style={'margin-top': '20px'},
+                            ),
+                        ],        
                     ),
                 ),
                 dbc.ModalFooter(
@@ -359,8 +354,8 @@ more_info = html.Div(
                 ),
             ],
             id="more-info-modal",
-            size="xl", #"lg" lg -> large,  xl -> extra-large
-            scrollable=True, #comment if you want 
+            size="xl", # "lg" lg -> large,  xl -> extra-large
+            #scrollable=True, # uncomment if you want 
         ),   
     ], 
 )
@@ -769,7 +764,7 @@ def plot_data2(macrobasin, variables, year, month=12):
     dfc.rename({"v_rainfall_total":"rainfall total mm", "v_flow_mean":"flow mean m3/s"}, axis='columns', inplace= True)
     print('+'*30, macrobasin, variables, year, month,'+'*30)
     var = variables[0]
-    _fig = px.box(dfc, x='month', y=var,width=800, height=400, title=f' multi-year monthly {var[:4]}')
+    _fig = px.box(dfc, x='month', y=var,width=500, height=350, title=f' multi-year monthly {var[:4]}')
     _fig.update_layout(
     title={
         'y':0.8,
@@ -793,7 +788,7 @@ def update_flowbox_graph(y_value, feature=None):
 
 @app.callback(Output('pptbox-graph', 'figure'),
     [Input('year-slider', 'value'), Input("basins_map", "featureClick")])
-def update_flowbox_graph(y_value, feature=None):
+def update_pptbox_graph(y_value, feature=None):
     macrobasin_id = 1
     if not feature is None:
         macrobasin_id = get_macrobasin_id(feature)
@@ -850,9 +845,23 @@ def update_more_info_title(feature=None):
 
 #TODO: Capturar el cambio y filtrar la data, las gráficas estén supervisando esta data para que se propague
 
-@app.callback([Output('scenarios', 'style'), Output("cover-loss-card", "className"), Output("temperature-card", "className")],[Input('year-slider', 'value')], [State("cover-loss-card", "className"), State("temperature-card", "className")])
+@app.callback([Output('scenarios', 'children'), Output('scenarios', 'style'), Output("cover-loss-card", "className"), Output("temperature-card", "className")],[Input('year-slider', 'value')], [State("cover-loss-card", "className"), State("temperature-card", "className")])
 def on_switch(value, cover_loss_class, temperature_class):
-    return {"display": "block" if value > 2019 else "none"}, f"{cover_loss_class} disabled-card" if value > 2019 else cover_loss_class.split()[0], f"{temperature_class} disabled-card" if value > 2019 else temperature_class.split()[0]
+    children = [
+        dcc.Slider(
+            min=1,
+            max=4,
+            step=None,
+            marks=scenarios,
+            value=1,
+            id = "scenarios-slider",
+        ),
+        dbc.Tooltip(
+            "slide to choose between different climate change scenarios",
+            target="scenarios-slider",
+        ),
+    ] 
+    return children, {"display": "block" if value > 2019 else "none"}, f"{cover_loss_class} disabled-card" if value > 2019 else cover_loss_class.split()[0], f"{temperature_class} disabled-card" if value > 2019 else temperature_class.split()[0]
 
 
 kwargs = {"data-step":"3", "data-intro":"You Can Select any macro basin you are interested", "data-position":'right', "data-scrollTo":'tooltip'}
