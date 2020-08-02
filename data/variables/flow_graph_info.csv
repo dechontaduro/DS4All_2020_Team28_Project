@@ -1,0 +1,49 @@
+,cuenca,codigo,nombre,municipio,categoria,tecnologia,altitud
+0,1,26027240,MALVASA,Totoró,Limnigráfica,Convencional,"2,977"
+1,2,26057040,TIMBA,Buenos Aires,Limnigráfica,Convencional,124
+2,3,21057060,PAICOL - AUT,Tesalia,Limnigráfica,Automática sin Telemetría,785
+3,4,26137220,EL RETEN - AUT,Santa Rosa De Cabal,Limnigráfica,Automática con Telemetría,188
+4,5,22027020,GAITANIA,Planadas,Limnigráfica,Convencional,"1,225"
+5,6,22017010,BOCAS,Rioblanco,Limnigráfica,Convencional,751
+6,7,22057040,PALMALARGA,Chaparral,Limnigráfica,Automática sin Telemetría,435
+7,8,22047010,QUESO EL HACIENDA,Chaparral,Limnimétrica,Convencional,551
+8,9,35077080,PTE FIERRO  - AUT ,Somondoco,Limnigráfica,Automática con Telemetría,"1,335"
+9,10,21167080,LA MORA - AUT,Prado,Limnigráfica,Automática con Telemetría,464
+10,11,21197010,EL PROFUNDO - AUT,Cabrera (Cundinamarca),Limnigráfica,Automática con Telemetría,"1,86"
+11,12,21217200,CARMEN EL,Rovira,Limnigráfica,Convencional,821
+12,13,23057140,SAN MIGUEL - AUT,Sonsón,Limnigráfica,Automática con Telemetría,176
+13,14,24027010,SAN GIL,San Gil,Limnimétrica,Convencional,"1,113"
+14,15,23147020,PUENTE FERROCARRIL,Simacota,Limnigráfica,Convencional,90
+15,16,24067020,PUENTE SOGAMOSO - AUT,Puerto Wilches,Limnimétrica,Automática con Telemetría,90
+16,17,21017020,SAN AGUSTIN - AUT,San Agustín,Limnigráfica,Convencional,"1,233"
+17,18,23107020,LA BODEGA - AUT,Yondó (Casabe),Limnigráfica,Automática con Telemetría,149
+18,19,24017600,MONIQUIRA  - AUT,Moniquirá,Limnigráfica,Automática con Telemetría,"1,72"
+19,20,23197370,SAN RAFAEL,Sabana De Torres,Limnimétrica,Convencional,78
+20,21,26027100,PUENTE CARRETERA,Piendamó,Limnigráfica,Convencional,"1,796"
+21,22,35197180,MANI,Mani,Limnimétrica,Convencional,290
+22,23,35017090,PUENTE CAMACHO,San Martín (Meta),Limnimétrica,Convencional,410
+23,24,16037030,PUENTE SARDINATA - AUT,Sardinata,Limnigráfica,Automática con Telemetría,245
+24,25,16047010,PUENTE ABREGO - AUT,Ábrego,Limnigráfica,Automática con Telemetría,"1,43"
+25,26,16027100,CORNEJO,San Cayetano (Norte de Santander),Limnigráfica,Convencional,270
+26,27,16017020,LA DONJUANA - AUT,Chinácota,Limnigráfica,Automática con Telemetría,730
+27,28,12017020,BARRANQUILLITA  - AUT,Chigorodó,Limnimétrica,Automática con Telemetría,22
+28,29,11037020,PUENTE CERTEGUI,Cértegui,Limnigráfica,Convencional,77
+29,30,52017070,BOCATOMA SAJANDI,Patía (El Bordo),Limnigráfica,Convencional,740
+30,31,52037010,CANADA LA,Colón (Génova),Limnigráfica,Convencional,"1,75"
+31,32,52047010,UNIVERSIDAD,Pasto,Limnigráfica,Convencional,"2,5"
+32,33,52067030,VERGEL EL,Los Andes (Sotomayor),Limnigráfica,Automática con Telemetría,"1,24"
+33,34,44017110,ANDAQUI  - AUT,Mocoa,Limnigráfica,Automática con Telemetría,460
+34,35,47017160,PUENTE TEXAS,Puerto Asís,Limnigráfica,Automática sin Telemetría,250
+35,36,32077070,PIÑALITO,Vistahermosa,Limnimétrica,Convencional,318
+36,37,23067040,PUERTO LIBRE  - AUT,Puerto Salgar,Limnigráfica,Automática con Telemetría,"1,784"
+37,38,52057050,SAN PEDRO  - AUT,Linares,Limnigráfica,Automática con Telemetría,850
+38,39,35107030,CABUYARO,Cabuyaro,Limnimétrica,Convencional,169
+39,40,35117010,HUMAPO,Puerto López,Limnimétrica,Convencional,153
+40,41,35267080,AGUAVERDE,La Primavera,Limnigráfica,Convencional,82
+41,42,42077020,MITU,Mitú,Limnigráfica,Automática con Telemetría,180
+42,43,11047020,QUIBDO - AUT,Quibdó,Limnigráfica,Automática con Telemetría,27
+43,44,11077010,BELLAVISTA ,Bojayá (Bellavista),Limnimétrica,Convencional,12
+44,45,32037030,LA MACARENA,La Macarena,Limnigráfica,Convencional,218
+45,46,32107010,PUERTO ARTURO,San José Del Guaviare,Limnigráfica,Convencional,175
+46,47,32157060,BARRANCO MURCIELAG,Barranco Mina,Limnigráfica,Convencional,98
+47,48,32207010,CEJAL,Cumaribo,Limnimétrica,Convencional,94

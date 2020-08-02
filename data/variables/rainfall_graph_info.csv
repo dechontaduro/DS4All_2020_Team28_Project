@@ -1,0 +1,104 @@
+CANT,codigo,nombre,municipio,categoria,tecnologia,altitud,porcentaje
+1,26020460,POLINDARA,Totoró,Pluviométrica,Convencional,"2,507",0.445430369
+1,26020130,TOTORO,Totoró,Pluviométrica,Convencional,"2,427",0.554569631
+2,26050060,SUAREZ,Buenos Aires,Pluviométrica,Convencional,195,1.0
+3,21050060,ARGENTINA LA,La Argentina,Pluviométrica,Convencional,"1,5",0.129064822
+3,21050090,NATAGA  - AUT,Nátaga,Pluviométrica,Automática con Telemetría,"1,545",0.870935178
+4,26130020,TERMALES,Santa Rosa De Cabal,Pluviométrica,Convencional,21,1.0
+5,22020050,SANTIAGO PEREZ,Ataco,Pluviométrica,Convencional,732,1.0
+6,22020050,SANTIAGO PEREZ,Ataco,Pluviométrica,Convencional,732,1.0
+7,22020050,SANTIAGO PEREZ,Ataco,Pluviométrica,Convencional,732,1.0
+8,22060110,GUAINI,Chaparral,Pluviométrica,Convencional,746,1.0
+9,35070100,SOMONDOCO,Somondoco,Pluviométrica,Convencional,"1,6",1.0
+10,21160160,LLANITOS,Dolores,Pluviométrica,Convencional,"1,388",0.55383863
+10,21160170,FIQUE EL,Prado,Pluviométrica,Convencional,140,0.44616137
+11,21190350,TULCAN EL,San Bernardo (Cundinamarca),Pluviométrica,Convencional,"2,7",1.0
+12,21210200,BUENOS AIRES,Ibagué,Pluviométrica,Convencional,728,1.0
+13,23050100,SAN MIGUEL,Sonsón,Pluviométrica,Convencional,"1,751",0.340302111
+13,23040070,CANAVERAL,Victoria,Pluviométrica,Convencional,189,0.659697889
+14,24020130,CURITI 2,Curití,Pluviométrica,Convencional,"1,626",0.145190067
+14,24020080,VALLE DE SAN JOSE,Valle De San José,Pluviométrica,Convencional,"1,3",0.738270619
+14,24020120,COROMORO,Coromoro,Pluviométrica,Convencional,"1,52",0.116539314
+15,23160010,YONDO,Yondó (Casabe),Pluviométrica,Convencional,85,0.60514423
+16,23160010,YONDO,Yondó (Casabe),Pluviométrica,Convencional,85,0.509986808
+15,24050060,SAN VICENTE,San Vicente De Chucurí,Pluviométrica,Convencional,721,0.39485577
+16,24050060,SAN VICENTE,San Vicente De Chucurí,Pluviométrica,Convencional,721,0.288144268
+16,24060050,MESA LA,Los Santos,Pluviométrica,Convencional,"1,46",0.201868925
+17,21010230,BETANIA TV,San Agustín,Pluviométrica,Convencional,"1,949",0.489694367
+17,21010140,CANDELA LA,San Agustín,Pluviométrica,Convencional,"1,94",0.510305633
+18,23100030,TIGRE EL,Vegachí,Pluviométrica,Convencional,"1,45",1.0
+19,24010850,PALMA LA,Gámbita,Pluviométrica,Convencional,"2,1",0.153550724
+19,24010810,GACHANTIVA,Gachantivá,Pluviométrica,Convencional,"2,375",0.846449276
+20,23180070,SABANA DE TORRES,Sabana De Torres,Pluviométrica,Convencional,144,0.44290741899999997
+20,23190380,PALMAS,Lebrija,Pluviométrica,Convencional,855,0.26454821300000003
+20,23190360,PORTACHUELO,Rionegro (Santander),Pluviométrica,Convencional,800,0.292544368
+21,26020030,PIENDAMO,Piendamó,Pluviométrica,Convencional,"1,872",1.0
+22,35180010,PRADERA LA,Tauramena,Pluviométrica,Convencional,180,1.0
+40,35180010,PRADERA LA,Tauramena,Pluviométrica,Convencional,180,0.2109
+41,35180010,PRADERA LA,Tauramena,Pluviométrica,Convencional,180,0.1714
+23,35010090,SAN MARTIN,San Martín (Meta),Pluviométrica,Convencional,420,1.0
+24,16030080,LOURDES,Lourdes,Pluviométrica,Convencional,"1,2",0.7749398040000001
+24,16030140,DIVISIONES,Sardinata,Pluviométrica,Convencional,100,0.22506019600000002
+25,16050100,EL CHORRO,Ábrego,Pluviométrica,Convencional,"1,498",1.0
+26,16020010,GRAMALOTE,Gramalote,Pluviométrica,Convencional,120,1.0
+27,16020080,CUCUTILLA,Cucutilla,Pluviométrica,Convencional,"1,28",1.0
+28,12010030,BARRANQUILLITA,Chigorodó,Pluviométrica,Convencional,18,1.0
+29,54020080,BEBEDO,Medio San Juan,Pluviométrica,Convencional,35,1.0
+30,52010040,ROSAS,Rosas,Pluviométrica,Convencional,"1,75",0.28344181399999996
+30,52020010,GUACHICONO,Bolívar (Cauca),Pluviométrica,Convencional,720,0.716558186
+31,52030060,HIDROMAYO CAMP,Colón (Génova),Pluviométrica,Convencional,"1,82",1.0
+32,52040060,ROSAL DEL MONTE,Buesaco,Pluviométrica,Convencional,"2,568",1.0
+33,52060050,SANDE EL,Santa Cruz (Guachavés),Pluviométrica,Convencional,840,1.0
+34,44010100,SANTA ROSA,Santa Rosa (Cauca),Pluviográfica,Convencional,"1,51",0.371324726
+34,44010090,CONDAGUA,Mocoa,Pluviométrica,Convencional,500,0.371324726
+34,44010030,CAMPUCANA,Mocoa,Pluviométrica,Convencional,"1,4",0.257350547
+35,47010180,TORRE TV SAN FCO,San Francisco (Putumayo),Pluviométrica,Convencional,30,0.330520665
+35,47010050,CHUNGACASPI,San Francisco (Putumayo),Pluviométrica,Convencional,"2,1",0.29390562800000003
+35,47010030,PUERTO ASIS,Puerto Asís,Pluviométrica,Convencional,260,0.37557370799999995
+36,32070040,PIÑALITO,Vistahermosa,Pluviométrica,Convencional,245,0.5088168710000001
+36,32070100,SAN JUAN DE ARAMA,San Juan De Arama,Pluviométrica,Convencional,410,0.204533856
+36,32070010,CAMPO ALEGRE,Vistahermosa,Pluviométrica,Convencional,260,0.286649274
+37,23060260,CHILAGUA FINCA,Nocaima,Pluviométrica,Convencional,"1,5",0.321579077
+37,23060180,PENON EL,El Peñón (Cundinamarca),Pluviométrica,Convencional,"1,4",0.392668995
+37,23060290,SILENCIO EL,Sasaima,Pluviométrica,Convencional,"1,425",0.285751928
+38,52050040,SANDONA,Sandoná,Pluviométrica,Convencional,20,0.487987369
+38,52050140,VIVERO LINARES,Linares,Pluviométrica,Convencional,"1,48",0.512012631
+39,35010010,PUERTO LOPEZ,Puerto López,Pluviométrica,Convencional,182,0.2984
+40,35010010,PUERTO LOPEZ,Puerto López,Pluviométrica,Convencional,182,0.2525
+41,35010010,PUERTO LOPEZ,Puerto López,Pluviométrica,Convencional,182,0.1413
+39,35050010,MEDINA,Medina,Pluviométrica,Convencional,480,0.3361
+40,35050010,MEDINA,Medina,Pluviométrica,Convencional,480,0.1491
+41,35050010,MEDINA,Medina,Pluviométrica,Convencional,480,0.134
+39,35020060,POMPEYA,Villavicencio,Pluviométrica,Convencional,260,0.2219
+40,35020060,POMPEYA,Villavicencio,Pluviométrica,Convencional,260,0.1448
+41,35020060,POMPEYA,Villavicencio,Pluviométrica,Convencional,260,0.1264
+39,35030030,SENA,Villavicencio,Pluviográfica,Convencional,425,0.1436
+40,35030030,SENA,Villavicencio,Pluviográfica,Convencional,425,0.0833
+41,35030030,SENA,Villavicencio,Pluviográfica,Convencional,425,0.1087
+40,35070170,NAZARETH,Santa María (Boyacá),Pluviométrica,Convencional,400,0.1595
+41,35070170,NAZARETH,Santa María (Boyacá),Pluviométrica,Convencional,400,0.1427
+41,35197180,MANI,Mani,Limnimétrica,Convencional,290,0.1755
+42,42050020,MANDI,Mitú,Pluviométrica,Convencional,190,0.221
+42,42070010,SAN ANTONIO,Mitú,Pluviométrica,Convencional,185,0.2533
+42,42070020,PITUNA,Mitú,Pluviométrica,Convencional,185,0.5257
+43,11010010,VUELTA LA,Cértegui,Pluviométrica,Convencional,98,0.205
+44,11010010,VUELTA LA,Cértegui,Pluviométrica,Convencional,98,0.1122
+43,11035020,SAN ISIDRO,Rio Quito (Paimadó),Pluviométrica,Convencional,53,0.3242
+44,11035020,SAN ISIDRO,Rio Quito (Paimadó),Pluviométrica,Convencional,53,0.1362
+43,11040010,TUTUNENDO,Quibdó,Pluviométrica,Convencional,54,0.4708
+44,11040010,TUTUNENDO,Quibdó,Pluviométrica,Convencional,54,0.1449
+44,11050060,ALTO DEL BUEY,Medio Atrato (Beté),Pluviométrica,Convencional,100,0.2751
+44,11050010,TAGACHI,Quibdó,Pluviométrica,Convencional,20,0.3317
+45,32010010,LA MARIPOSA,Uribe,Pluviométrica,Convencional,383,1.0
+46,32010010,LA MARIPOSA,Uribe,Pluviométrica,Convencional,383,0.1618
+47,32010010,LA MARIPOSA,Uribe,Pluviométrica,Convencional,383,0.2181
+48,32010010,LA MARIPOSA,Uribe,Pluviométrica,Convencional,383,0.2252
+46,32070060,FUENTE DE ORO,Fuente De Oro,Pluviométrica,Convencional,300,0.1868
+47,32070060,FUENTE DE ORO,Fuente De Oro,Pluviométrica,Convencional,300,0.2507
+48,32070060,FUENTE DE ORO,Fuente De Oro,Pluviométrica,Convencional,300,0.2509
+46,32080010,PUERTO RICO,Puerto Rico (Meta),Pluviométrica,Convencional,230,0.42
+47,32080010,PUERTO RICO,Puerto Rico (Meta),Pluviométrica,Convencional,230,0.2743
+48,32080010,PUERTO RICO,Puerto Rico (Meta),Pluviométrica,Convencional,230,0.2685
+46,32070020,CAÑO BLANCO,Puerto Lleras,Pluviométrica,Convencional,240,0.2315
+47,32070020,CAÑO BLANCO,Puerto Lleras,Pluviométrica,Convencional,240,0.2569
+48,32070020,CAÑO BLANCO,Puerto Lleras,Pluviométrica,Convencional,240,0.2554
