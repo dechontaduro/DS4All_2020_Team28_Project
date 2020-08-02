@@ -43,7 +43,7 @@ Use the following datasets:
 - **\explore\VariableMensualTop5Plots.ipynb**: Boxplot graphs of the 5 basins with the highest and lowest flow.
 - **\explore\VariablePorMesExploracion.ipynb**:  Monthly exploratory graphs of the variables.
 
-## Model**: scripts for creating the models
+## Model: scripts for creating the models
 - **\model\LSTM.ipynb**: Training and validation of the LSTM model for flow.
 - **\model\LSTM_forecast_2020_2021.ipynb**: Generate flow predictions using the LSTM model.
 - **\model\VAR.ipynb**: Training and validation of the LSTM model for flow.
