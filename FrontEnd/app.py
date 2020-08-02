@@ -750,4 +750,4 @@ app.layout = dbc.Container(
 )
 
 if __name__ in ["__main__"]:
-    app.run_server(debug=True)
+    app.run_server(debug=False)
