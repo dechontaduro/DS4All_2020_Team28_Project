@@ -28,7 +28,7 @@ model_rank_path = '../model/model_rank.csv'
 data_forecast_path = '../model/forecast_2020_2021.csv'
 
 #forecast_group_column_format = 'Forecast_{Rank}_{model_type}_CC{loss_cover_scenario}'
-forecast_group_column_format = 'Forecast_{}_{}_LossCover{}'
+forecast_group_column_format = 'RiverFlowForecast_{}_{}_LossCover{}'
 
 variables_graph = [
     {'variable':'flow', 'label':'Flow', 'color': ['#B855A4'], 'axis': '1'}, 
@@ -1012,5 +1012,6 @@ app.layout = dbc.Container(
 )
 
 if __name__ in ["__main__"]:
+    #app.run_server(debug=True)
     app.run_server(debug=False ,  port = 8080 , host = 'ec2-18-220-173-32.us-east-2.compute.amazonaws.com' )
-     #app.server.run(debug=False, threaded=True, port = 5011, host = 'ec2-54-201-96-238.us-west-2.compute.amazonaws.com')
+    #app.server.run(debug=False, threaded=True, port = 5011, host = 'ec2-54-201-96-238.us-west-2.compute.amazonaws.com')
