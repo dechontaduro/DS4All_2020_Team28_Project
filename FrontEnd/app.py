@@ -251,6 +251,7 @@ dff.drop(columns= ['Unnamed: 0'], inplace= True)
 DATA = dff.to_dict('records')
 
 rainfall_graph= pd.read_csv('../data/variables/rainfall_graph_info.csv')
+rainfall_graph.drop(columns=(['porcentaje']), inplace=True)
 rainfall_graph.set_index(['CANT'], inplace=True)
 df_rainfall = rainfall_graph.to_dict('records')
 
@@ -258,6 +259,12 @@ flow_graph= pd.read_csv('../data/variables/flow_graph_info.csv')
 flow_graph.set_index(['cuenca'], inplace=True)
 flow_graph.drop(columns= ['Unnamed: 0'], inplace= True)
 df_flow = flow_graph.to_dict('records')
+
+info_models_aplly= pd.read_csv('../model/models_aplied.csv')
+info_models_aplly.set_index(['MC'], inplace=True)
+
+title='Models performing with test error <16% in Basin'
+text= ''
 
 kwargs = {"data-step":"5", "data-intro":"Here you can find more information about the selected Basin", "data-position":'right', "data-scrollTo":'tooltip'}
 more_info = html.Div(
@@ -267,16 +274,32 @@ more_info = html.Div(
         ),
         dbc.Modal(#put here the content
             [
-                dbc.ModalHeader("More Information of The Selected Basin"),
+                dbc.ModalHeader("More info of selected basin"), 
                 dbc.ModalBody(
                     html.Div(
                         [
                             dbc.Row(
+                                [ 
+                                    dbc.Col(),
+                                    dbc.Col(),
+                                    dbc.Col(html.Img(src=f"assets/img/col-gov-logo.png", width="200px")),
+                                ],
+                            ),
+                            dbc.Row(
                                 [
                                     dbc.Col([
-                                        html.H4(children= 'basin',
-                                        id= 'more_info_title'
-                                                ),
+                                        html.H4(
+                                            children= 'basin',
+                                            id= 'more_info_title'
+                                         ),
+                                        html.H5(
+                                            children= title,
+                                            id= 'models_title'
+                                        ),
+                                        html.P(
+                                            children= text,
+                                            id='model_info_text'
+                                        ),
                                         dt.DataTable(
                                             id='table',
                                             columns=[{"name": i, "id": i} for i in dff.columns],
@@ -291,7 +314,7 @@ more_info = html.Div(
                                             },
                                         ),
                                      ],),
-                                ], 
+                                ],
                             ),
                             dbc.Row(
                                 [
@@ -300,7 +323,7 @@ more_info = html.Div(
                                             md=5,
                                     ),
                                     dbc.Col([
-                                            html.H4(children= 'information of the flow station of the basin'),
+                                            html.H4(children= '''Basin's flow station    information'''),
                                             dt.DataTable( id='table_2',
                                             columns=[{"name": i, "id": i} for i in flow_graph.columns],
                                             data=df_flow,
@@ -327,7 +350,7 @@ more_info = html.Div(
                                     ),
                                     dbc.Col(
                                         [
-                                            html.H4(children= 'information of the precipitation stations of the basin'),
+                                            html.H4(children= '''Basin's precipitation stations information'''),
                                             dt.DataTable( id='table_1',
                                             columns=[{"name": i, "id": i} for i in rainfall_graph.columns],
                                             data=df_rainfall,
@@ -345,8 +368,8 @@ more_info = html.Div(
                                     ),
                                 ],
                                 style={'margin-top': '20px'},
-                            ),
-                        ],        
+                            ),        
+                        ],  
                     ),
                 ),
                 dbc.ModalFooter(
@@ -354,10 +377,10 @@ more_info = html.Div(
                 ),
             ],
             id="more-info-modal",
-            size="xl", # "lg" lg -> large,  xl -> extra-large
-            #scrollable=True, # uncomment if you want 
+            size="xl", #"lg" lg -> large,  xl -> extra-large
+            scrollable=True, #comment if you want 
         ),   
-    ], 
+    ]
 )
 
 ##########################################################
@@ -404,7 +427,6 @@ about_div = html.Div(
     ],
     **kwargs
 )
-
 
 ################################################################################
 ############################## help button #####################################
@@ -788,7 +810,7 @@ def update_flowbox_graph(y_value, feature=None):
 
 @app.callback(Output('pptbox-graph', 'figure'),
     [Input('year-slider', 'value'), Input("basins_map", "featureClick")])
-def update_pptbox_graph(y_value, feature=None):
+def update_flowbox_graph(y_value, feature=None):
     macrobasin_id = 1
     if not feature is None:
         macrobasin_id = get_macrobasin_id(feature)
@@ -839,7 +861,64 @@ def update_more_info_title(feature=None):
     macrobasin_id = 1
     if not feature is None:
         macrobasin_id = get_macrobasin_id(feature)
-    return "Basin {}".format(str(macrobasin_id))
+    return "Basin {} info".format(str(macrobasin_id))
+
+@app.callback(
+    Output('models_title', 'children'),
+    [ Input("basins_map", "featureClick")])
+def update_more_info_title(feature=None):
+    macrobasin_id = 1
+    l_0= [2, 4, 5, 6, 7, 8, 11, 12, 13, 14, 15, 16, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 30, 37, 45] 
+    if not feature is None:
+        macrobasin_id = get_macrobasin_id(feature)
+        if macrobasin_id in l_0:
+            global title
+            title= "In this basin, none of the models managed to perform with test error <16%, this is our explanation:"
+        else:
+            title=" Models performing with test error <16% in Basin"
+    return title
+
+@app.callback(
+    Output('model_info_text', 'children'),
+    [ Input("basins_map", "featureClick")])
+def update_model_info_text(feature=None):
+    macrobasin_id = 1
+    l_0= [2, 4, 5, 6, 7, 8, 11, 12, 13, 14, 15, 16, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 30, 37, 45] 
+    l_1= [10, 31, 32, 35, 38, 42, 43, 44, 46]
+    l_2= [1, 3, 9, 18, 33, 34, 36, 39, 40, 41, 47, 48]
+    l_3= [17, 29]
+    if not feature is None:
+        macrobasin_id = get_macrobasin_id(feature)
+        if macrobasin_id in l_0:
+            global text
+            text = ''' After all the process developed, one of the main observations, was that the models 
+            can predict with more accuracy the flow in the river basin with less human interventions. This 
+            is due to the fact that human activities consume a lot of water, mostly from the rivers, like 
+            aqueducts, farms, industry, and dams, and all that modified the natural regime of the rivers. 
+            In the case of Colombia, most of the population is concentrated in the Andes region, so the 
+            river basins in that area cannot be modeled with precision with the actual level of information. 
+            It will be required much more detailed data of all those water consumptions in order to develop a 
+            more accurate model for those basins. On the other hand, for the river basins in the plain areas 
+            of the country, like the “llanos orientales”, where the population density is low, and the human 
+            intervention is minimal, the models applied where able to predict the river flow under different 
+            scenarios, with relatively good accuracy.'''
+        if macrobasin_id in l_1:
+            text= '{}'.format(info_models_aplly.loc[macrobasin_id][0])
+        if macrobasin_id in l_2:
+            text= '''
+            {} &
+            {}
+            '''.format(info_models_aplly.loc[macrobasin_id][0],info_models_aplly.loc[macrobasin_id][1])
+        if macrobasin_id in l_3:
+            text= '''
+            {},
+            {}&
+            {}
+            '''.format(info_models_aplly.loc[macrobasin_id][0],info_models_aplly.loc[macrobasin_id][1],info_models_aplly[macrobasin_id][3])
+    return text
+   
+
+
 
 
 
@@ -933,4 +1012,5 @@ app.layout = dbc.Container(
 )
 
 if __name__ in ["__main__"]:
-    app.run_server(debug=False)
+    app.run_server(debug=False ,  port = 8080 , host = 'ec2-18-220-173-32.us-east-2.compute.amazonaws.com' )
+     #app.server.run(debug=False, threaded=True, port = 5011, host = 'ec2-54-201-96-238.us-west-2.compute.amazonaws.com')
